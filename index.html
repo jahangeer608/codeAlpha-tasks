@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>Lingo Board · Translator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Phone frame (for desktop preview). On an actual phone this just fills the screen. -->
+  <div class="phone-frame">
+    <div class="phone-screen">
+
+      <!-- Status bar -->
+      <div class="status-bar">
+        <span class="status-time">9:41</span>
+        <div class="status-icons">
+          <span class="icon-signal">▂▄▆█</span>
+          <span class="icon-wifi">◉</span>
+          <span class="icon-battery">▮▮▮</span>
+        </div>
+      </div>
+
+      <!-- App header -->
+      <header class="app-header">
+        <div class="app-title-row">
+          <div class="app-logo">✈</div>
+          <div>
+            <h1 class="app-title">Lingo Board</h1>
+            <p class="app-subtitle">Now boarding: your words</p>
+          </div>
+        </div>
+      </header>
+
+      <main class="app-main">
+
+        <!-- Departure-board style language selector -->
+        <section class="board" aria-label="Language route selector">
+          <div class="board-row">
+
+            <div class="board-cell">
+              <label class="board-label" for="sourceLang">FROM</label>
+              <select id="sourceLang" class="board-select">
+                <!-- populated by script.js -->
+              </select>
+            </div>
+
+            <button id="swapBtn" class="swap-btn" aria-label="Swap languages" title="Swap languages">
+              <span class="swap-icon">⇄</span>
+            </button>
+
+            <div class="board-cell">
+              <label class="board-label" for="targetLang">TO</label>
+              <select id="targetLang" class="board-select">
+                <!-- populated by script.js -->
+              </select>
+            </div>
+
+          </div>
+          <div class="board-strip" id="boardStrip">EN&nbsp;&nbsp;→&nbsp;&nbsp;FR</div>
+        </section>
+
+        <!-- Input card -->
+        <section class="card">
+          <div class="card-head">
+            <span class="card-eyebrow">DEPARTING TEXT</span>
+            <span class="char-count" id="charCount">0 / 500</span>
+          </div>
+          <textarea
+            id="sourceText"
+            class="text-area"
+            maxlength="500"
+            placeholder="Type or paste text to translate…"
+            aria-label="Text to translate"
+          ></textarea>
+          <div class="card-foot">
+            <button id="clearBtn" class="ghost-btn">Clear</button>
+            <button id="micBtn" class="ghost-btn" title="Speak your text">🎤 Speak</button>
+          </div>
+        </section>
+
+        <!-- Translate action -->
+        <button id="translateBtn" class="translate-btn">
+          <span class="translate-btn-text">Translate</span>
+          <span class="translate-btn-icon">→</span>
+        </button>
+
+        <!-- Output card (boarding-pass style) -->
+        <section class="card ticket" id="resultCard" aria-live="polite">
+          <div class="ticket-perf"></div>
+          <div class="card-head">
+            <span class="card-eyebrow">ARRIVING TEXT</span>
+            <span class="status-pill" id="statusPill">Ready</span>
+          </div>
+
+          <div id="resultBody" class="result-body">
+            <p class="placeholder-text" id="placeholderText">
+              Your translation will land here.
+            </p>
+          </div>
+
+          <div class="card-foot result-actions">
+            <button id="copyBtn" class="ghost-btn" disabled>📋 Copy</button>
+            <button id="speakBtn" class="ghost-btn" disabled>🔊 Listen</button>
+          </div>
+        </section>
+
+      </main>
+
+      <!-- Bottom nav (decorative, reinforces "app" feel) -->
+      <nav class="bottom-nav">
+        <button class="nav-item active">
+          <span class="nav-icon">🌐</span>
+          <span class="nav-label">Translate</span>
+        </button>
+        <button class="nav-item">
+          <span class="nav-icon">⭐</span>
+          <span class="nav-label">Saved</span>
+        </button>
+        <button class="nav-item">
+          <span class="nav-icon">⚙</span>
+          <span class="nav-label">Settings</span>
+        </button>
+      </nav>
+
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
