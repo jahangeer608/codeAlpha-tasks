@@ -1,0 +1,207 @@
+:root{
+  --bg-deep:#0E2429;
+  --bg-page:#0A1B1F;
+  --card:#153338;
+  --card-edge:#1E4147;
+  --ink:#F3ECDC;
+  --ink-dim:#9FB8B6;
+  --brass:#D4A24C;
+  --brass-dim:#8A6F3C;
+}
+*{box-sizing:border-box;}
+html,body{
+  margin:0;
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 20% 10%, #123137 0%, var(--bg-page) 55%);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:'Work Sans', sans-serif;
+  padding:32px 16px;
+}
+
+/* ---- phone frame ---- */
+.phone{
+  width:390px;
+  height:820px;
+  background:#050D0F;
+  border-radius:52px;
+  padding:14px;
+  box-shadow:
+    0 40px 80px -20px rgba(0,0,0,0.7),
+    0 0 0 2px #1a1a1a inset;
+  position:relative;
+}
+.phone::before{
+  content:"";
+  position:absolute;
+  top:26px; left:50%;
+  transform:translateX(-50%);
+  width:120px; height:26px;
+  background:#050D0F;
+  border-radius:20px;
+  z-index:5;
+}
+.screen{
+  width:100%;
+  height:100%;
+  background:var(--bg-deep);
+  border-radius:38px;
+  overflow:hidden;
+  position:relative;
+  display:flex;
+  flex-direction:column;
+}
+.home-indicator{
+  position:absolute;
+  bottom:10px; left:50%;
+  transform:translateX(-50%);
+  width:120px; height:4px;
+  border-radius:3px;
+  background:rgba(243,236,220,0.35);
+  z-index:5;
+}
+
+/* ---- app content ---- */
+.app{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  padding:64px 26px 40px;
+  position:relative;
+}
+.eyebrow{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:11px;
+  letter-spacing:0.22em;
+  text-transform:uppercase;
+  color:var(--brass);
+  text-align:center;
+  margin-bottom:6px;
+}
+.eyebrow-sub{
+  font-family:'Work Sans', sans-serif;
+  font-size:12px;
+  color:var(--ink-dim);
+  text-align:center;
+  margin-bottom:auto;
+}
+
+.card-wrap{
+  flex:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px 0;
+}
+.card{
+  background:var(--card);
+  border:1px solid var(--card-edge);
+  border-radius:18px;
+  padding:34px 26px 28px;
+  width:100%;
+  position:relative;
+  box-shadow:0 18px 40px -18px rgba(0,0,0,0.55);
+  opacity:0;
+  transform:translateY(10px);
+  animation:rise 0.5s ease forwards;
+}
+@keyframes rise{
+  to{opacity:1; transform:translateY(0);}
+}
+.tab{
+  position:absolute;
+  top:-13px; left:26px;
+  background:var(--brass);
+  color:var(--bg-page);
+  font-family:'IBM Plex Mono', monospace;
+  font-size:11px;
+  font-weight:500;
+  letter-spacing:0.08em;
+  padding:5px 10px;
+  border-radius:5px;
+}
+.mark{
+  font-family:'Fraunces', serif;
+  font-size:46px;
+  color:var(--brass-dim);
+  line-height:1;
+  margin:6px 0 4px;
+}
+.quote-text{
+  font-family:'Fraunces', serif;
+  font-weight:400;
+  font-style:italic;
+  font-size:22px;
+  line-height:1.45;
+  color:var(--ink);
+  margin:0 0 22px;
+  min-height:150px;
+}
+.author-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.author-line{
+  flex:0 0 22px;
+  height:1px;
+  background:var(--brass);
+}
+.author{
+  font-family:'Work Sans', sans-serif;
+  font-weight:600;
+  font-size:14px;
+  letter-spacing:0.02em;
+  color:var(--ink);
+}
+
+.ticket{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  margin-top:18px;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:12px;
+  color:var(--ink-dim);
+  letter-spacing:0.08em;
+}
+.dots{
+  display:flex;
+  gap:5px;
+}
+.dot{
+  width:5px;height:5px;border-radius:50%;
+  background:rgba(159,184,182,0.35);
+}
+.dot.seen{background:var(--brass);}
+
+button#newQuoteBtn{
+  appearance:none;
+  border:none;
+  cursor:pointer;
+  width:100%;
+  padding:16px 0;
+  border-radius:30px;
+  background:var(--brass);
+  color:#1B120A;
+  font-family:'Work Sans', sans-serif;
+  font-weight:600;
+  font-size:15px;
+  letter-spacing:0.03em;
+  margin-top:22px;
+  transition:transform 0.12s ease, box-shadow 0.12s ease, background 0.2s ease;
+  box-shadow:0 10px 24px -10px rgba(212,162,76,0.55);
+}
+button#newQuoteBtn:hover{ background:#E4B667; }
+button#newQuoteBtn:active{ transform:scale(0.97); box-shadow:0 4px 12px -6px rgba(212,162,76,0.5); }
+button#newQuoteBtn:focus-visible{
+  outline:2px solid var(--ink);
+  outline-offset:3px;
+}
+
+@media (prefers-reduced-motion: reduce){
+  .card{ animation:none; opacity:1; transform:none; }
+}

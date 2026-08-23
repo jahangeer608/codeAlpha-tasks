@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
+<title>Piston Assembly — 3D Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #14171c;
+    --panel: #1c2128;
+    --panel-border: #2b323c;
+    --steel: #aeb4bd;
+    --copper: #c97b4a;
+    --amber: #e8a33d;
+    --text-hi: #e7e9ec;
+    --text-lo: #9aa3af;
+    --radius: 10px;
+  }
+  *{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body{
+    margin:0; padding:0; width:100%; height:100%;
+    background: var(--bg);
+    color: var(--text-hi);
+    font-family: 'Inter', sans-serif;
+    overflow: hidden;
+  }
+  #canvas-wrap{ position: fixed; inset: 0; }
+  canvas{ display:block; touch-action: none; }
+
+  /* ---------- Top spec panel ---------- */
+  #spec-panel{
+    position: fixed; top: 16px; left: 16px;
+    width: 300px;
+    background: rgba(28,33,40,0.82);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    z-index: 10;
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    color: var(--copper);
+    text-transform: uppercase;
+    margin: 0 0 6px 0;
+  }
+  h1{
+    font-family:'Space Grotesk', sans-serif;
+    font-size: 21px;
+    font-weight: 700;
+    margin: 0 0 12px 0;
+    letter-spacing: -0.01em;
+  }
+  .spec-row{
+    display:flex; justify-content: space-between;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--text-lo);
+    padding: 5px 0;
+    border-top: 1px solid var(--panel-border);
+  }
+  .spec-row span:last-child{ color: var(--text-hi); }
+
+  .legend{ margin-top: 12px; }
+  .legend-item{ display:flex; align-items:center; gap:8px; font-size: 12px; color: var(--text-lo); margin: 5px 0; }
+  .swatch{ width: 10px; height: 10px; border-radius: 2px; flex: 0 0 auto; }
+
+  /* ---------- Bottom control bar ---------- */
+  #control-bar{
+    position: fixed; left: 16px; right: 16px; bottom: 16px;
+    background: rgba(28,33,40,0.86);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    z-index: 10;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .row-label{
+    display:flex; justify-content: space-between; align-items:center;
+    font-family:'JetBrains Mono', monospace; font-size: 10.5px;
+    letter-spacing: 0.08em; color: var(--text-lo); text-transform: uppercase;
+  }
+  .row-label span.val{ color: var(--amber); }
+
+  input[type=range]{
+    -webkit-appearance:none; appearance:none;
+    width:100%; height: 4px; border-radius: 2px;
+    background: linear-gradient(90deg, var(--copper), var(--panel-border));
+    outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; appearance:none;
+    width:18px; height:18px; border-radius:50%;
+    background: var(--amber);
+    border: 2px solid #1c2128;
+    cursor:pointer;
+  }
+  input[type=range]::-moz-range-thumb{
+    width:16px; height:16px; border-radius:50%;
+    background: var(--amber); border: 2px solid #1c2128; cursor:pointer;
+  }
+
+  #btn-row{ display:flex; gap: 8px; }
+  button{
+    flex: 1;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase;
+    background: transparent;
+    color: var(--text-lo);
+    border: 1px solid var(--panel-border);
+    border-radius: 7px;
+    padding: 9px 6px;
+    cursor: pointer;
+    transition: all .15s ease;
+  }
+  button:hover{ border-color: var(--copper); color: var(--text-hi); }
+  button.active{ background: var(--copper); border-color: var(--copper); color: #14171c; font-weight: 600; }
+
+  #hint{
+    position: fixed; top: 16px; right: 16px;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 10.5px; color: var(--text-lo);
+    background: rgba(28,33,40,0.7); border:1px solid var(--panel-border);
+    border-radius: 8px; padding: 8px 10px; z-index: 10;
+    max-width: 150px; text-align: right; line-height:1.5;
+  }
+
+  /* ---------- Mobile ---------- */
+  @media (max-width: 640px){
+    #spec-panel{
+      top: auto; bottom: 128px; left: 12px; right: 12px; width: auto;
+      max-height: 34vh; overflow-y: auto;
+      transform: translateY(calc(100% + 8px));
+      transition: transform .25s ease;
+    }
+    #spec-panel.open{ transform: translateY(0); }
+    #spec-toggle{
+      position: fixed; bottom: 128px; left: 12px;
+      z-index: 11; width: auto; flex: none;
+      padding: 8px 14px; margin-bottom: 8px;
+      background: rgba(28,33,40,0.86); border:1px solid var(--panel-border);
+      border-radius: 8px; color: var(--text-hi); font-family:'JetBrains Mono', monospace;
+      font-size: 11px;
+    }
+    #hint{ display:none; }
+    #control-bar{ left: 12px; right: 12px; bottom: 12px; padding: 10px 12px; }
+    h1{ font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="canvas-wrap"></div>
+
+<button id="spec-toggle">☰ SPECS</button>
+
+<div id="spec-panel">
+  <p class="eyebrow">Mechanical Component — 3D Model</p>
+  <h1>Piston Assembly · MK-IV</h1>
+  <div class="spec-row"><span>Bore diameter</span><span>86.0 mm</span></div>
+  <div class="spec-row"><span>Compression height</span><span>31.5 mm</span></div>
+  <div class="spec-row"><span>Ring pack</span><span>3 × compression</span></div>
+  <div class="spec-row"><span>Piston material</span><span>Al–Si alloy</span></div>
+  <div class="spec-row"><span>Pin material</span><span>Case‑hardened steel</span></div>
+  <div class="spec-row"><span>Rod material</span><span>Forged steel</span></div>
+
+  <div class="legend">
+    <div class="legend-item"><span class="swatch" style="background:#aeb4bd"></span>Aluminum alloy — head &amp; skirt</div>
+    <div class="legend-item"><span class="swatch" style="background:#c97b4a"></span>Chrome‑plated steel — piston rings</div>
+    <div class="legend-item"><span class="swatch" style="background:#565f6b"></span>Hardened steel — pin, rod, journal</div>
+    <div class="legend-item"><span class="swatch" style="background:#e8a33d"></span>TDC calibration mark</div>
+  </div>
+</div>
+
+<div id="hint">Drag to orbit<br/>Scroll / pinch to zoom</div>
+
+<div id="control-bar">
+  <div>
+    <div class="row-label"><span>Exploded view</span><span class="val" id="explode-val">0%</span></div>
+    <input type="range" id="explode" min="0" max="100" value="0" />
+  </div>
+  <div id="btn-row">
+    <button id="btn-rotate">Auto‑rotate</button>
+    <button id="btn-wire">Wireframe</button>
+    <button id="btn-reset">Reset view</button>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+// ---------------------------------------------------------
+// Renderer / Scene / Camera
+// ---------------------------------------------------------
+const wrap = document.getElementById('canvas-wrap');
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+wrap.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x14171c);
+scene.fog = new THREE.Fog(0x14171c, 14, 26);
+
+const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(5.5, 4.2, 6.5);
+
+// Studio environment lighting for realistic metal reflections
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 3;
+controls.maxDistance = 14;
+controls.maxPolarAngle = Math.PI * 0.53;
+controls.target.set(0, 0.6, 0);
+controls.update();
+
+// ---------------------------------------------------------
+// Lights
+// ---------------------------------------------------------
+const key = new THREE.DirectionalLight(0xfff2e0, 2.6);
+key.position.set(5, 8, 4);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.camera.near = 1;
+key.shadow.camera.far = 20;
+key.shadow.camera.left = -5;
+key.shadow.camera.right = 5;
+key.shadow.camera.top = 5;
+key.shadow.camera.bottom = -5;
+key.shadow.bias = -0.0015;
+scene.add(key);
+
+const fill = new THREE.DirectionalLight(0x8fb4ff, 0.5);
+fill.position.set(-6, 3, -2);
+scene.add(fill);
+
+const rim = new THREE.PointLight(0xe8a33d, 6, 12, 2);
+rim.position.set(-2, 3, -4);
+scene.add(rim);
+
+const hemi = new THREE.HemisphereLight(0x334155, 0x0b0d10, 0.35);
+scene.add(hemi);
+
+// ---------------------------------------------------------
+// Ground: dark platform + faint technical grid
+// ---------------------------------------------------------
+const ground = new THREE.Mesh(
+  new THREE.CircleGeometry(9, 64),
+  new THREE.MeshStandardMaterial({ color: 0x0f1216, roughness: 0.95, metalness: 0.0 })
+);
+ground.rotation.x = -Math.PI / 2;
+ground.position.y = -1.55;
+ground.receiveShadow = true;
+scene.add(ground);
+
+const grid = new THREE.GridHelper(9, 36, 0x2b323c, 0x1e242c);
+grid.position.y = -1.548;
+scene.add(grid);
+
+// ---------------------------------------------------------
+// Materials
+// ---------------------------------------------------------
+const matAluminum = new THREE.MeshStandardMaterial({ color: 0xaeb4bd, metalness: 0.9, roughness: 0.32 });
+const matAluminumSkirt = new THREE.MeshStandardMaterial({ color: 0x9aa1ac, metalness: 0.88, roughness: 0.4 });
+const matCopperRing = new THREE.MeshStandardMaterial({ color: 0xc97b4a, metalness: 1.0, roughness: 0.22 });
+const matSteel = new THREE.MeshStandardMaterial({ color: 0x565f6b, metalness: 0.95, roughness: 0.22 });
+const matSteelDark = new THREE.MeshStandardMaterial({ color: 0x3d434c, metalness: 0.92, roughness: 0.3 });
+const matAmber = new THREE.MeshStandardMaterial({ color: 0xe8a33d, emissive: 0xe8a33d, emissiveIntensity: 0.9, metalness: 0.2, roughness: 0.4 });
+
+const allMaterials = [matAluminum, matAluminumSkirt, matCopperRing, matSteel, matSteelDark, matAmber];
+
+// ---------------------------------------------------------
+// Piston assembly — built from primitives, grouped so each
+// part can be pulled apart along Y for the exploded view.
+// ---------------------------------------------------------
+const assembly = new THREE.Group();
+scene.add(assembly);
+
+function addPart(mesh, baseY, explodeFactor){
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  mesh.userData.baseY = baseY;
+  mesh.userData.explodeFactor = explodeFactor; // how far it moves during explode
+  mesh.position.y = baseY;
+  assembly.add(mesh);
+  return mesh;
+}
+
+// Piston head (crown)
+const head = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 0.5, 64), matAluminum);
+addPart(head, 1.55, 1.6);
+
+// TDC calibration mark on crown
+const mark = new THREE.Mesh(new THREE.CircleGeometry(0.09, 24), matAmber);
+mark.rotation.x = -Math.PI / 2;
+mark.position.set(0.75, 1.805, 0);
+mark.userData.baseY = 1.805; mark.userData.explodeFactor = 1.6;
+assembly.add(mark);
+
+// Ring grooves (3 compression rings)
+const ringHeights = [1.18, 1.02, 0.86];
+ringHeights.forEach((y, i) => {
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(1.185, 0.045, 16, 64), matCopperRing);
+  ring.rotation.x = Math.PI / 2;
+  addPart(ring, y, 1.3 - i * 0.05);
+});
+
+// Skirt (tapered lower body)
+const skirt = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.02, 1.5, 64), matAluminumSkirt);
+addPart(skirt, 0.15, 0.5);
+
+// Wrist pin boss (through-hole cylinder, horizontal)
+const pin = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 2.7, 32), matSteel);
+pin.rotation.z = Math.PI / 2;
+addPart(pin, 0.15, 0.2);
+
+// Connecting rod — small end
+const rodSmallEnd = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.13, 20, 40), matSteel);
+rodSmallEnd.rotation.x = Math.PI / 2;
+addPart(rodSmallEnd, 0.15, -0.4);
+
+// Connecting rod — I-beam shaft (flattened box, tapered via scale)
+const rodShaft = new THREE.Mesh(new THREE.BoxGeometry(0.34, 2.1, 0.18), matSteel);
+addPart(rodShaft, -1.05, -1.1);
+
+// Connecting rod — big end
+const rodBigEnd = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.19, 20, 40), matSteel);
+rodBigEnd.rotation.x = Math.PI / 2;
+addPart(rodBigEnd, -2.15, -1.8);
+
+// Crank pin / journal
+const journal = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.9, 32), matSteelDark);
+journal.rotation.z = Math.PI / 2;
+addPart(journal, -2.15, -2.4);
+
+// Crank webs either side of journal (simple discs for context)
+[-0.62, 0.62].forEach((z) => {
+  const web = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.75, 0.22, 32), matSteelDark);
+  web.rotation.x = Math.PI / 2;
+  web.position.z = z;
+  addPart(web, -2.15, -2.8);
+});
+
+// Center the assembly a bit
+assembly.position.y = -0.15;
+
+// ---------------------------------------------------------
+// Interaction: exploded view slider
+// ---------------------------------------------------------
+const explodeSlider = document.getElementById('explode');
+const explodeVal = document.getElementById('explode-val');
+
+function applyExplode(t){
+  // t: 0..1
+  assembly.children.forEach((m) => {
+    const base = m.userData.baseY ?? 0;
+    const factor = m.userData.explodeFactor ?? 0;
+    m.position.y = base + factor * t * 2.2;
+  });
+}
+explodeSlider.addEventListener('input', (e) => {
+  const t = Number(e.target.value) / 100;
+  explodeVal.textContent = `${e.target.value}%`;
+  applyExplode(t);
+});
+
+// ---------------------------------------------------------
+// Buttons: auto-rotate / wireframe / reset
+// ---------------------------------------------------------
+const btnRotate = document.getElementById('btn-rotate');
+const btnWire = document.getElementById('btn-wire');
+const btnReset = document.getElementById('btn-reset');
+
+btnRotate.addEventListener('click', () => {
+  controls.autoRotate = !controls.autoRotate;
+  controls.autoRotateSpeed = 2.2;
+  btnRotate.classList.toggle('active', controls.autoRotate);
+});
+
+let wireOn = false;
+btnWire.addEventListener('click', () => {
+  wireOn = !wireOn;
+  allMaterials.forEach(m => m.wireframe = wireOn);
+  btnWire.classList.toggle('active', wireOn);
+});
+
+const startCamPos = camera.position.clone();
+btnReset.addEventListener('click', () => {
+  camera.position.copy(startCamPos);
+  controls.target.set(0, 0.6, 0);
+  explodeSlider.value = 0;
+  explodeVal.textContent = '0%';
+  applyExplode(0);
+  controls.update();
+});
+
+// Mobile spec panel toggle
+const specPanel = document.getElementById('spec-panel');
+const specToggle = document.getElementById('spec-toggle');
+specToggle.addEventListener('click', () => specPanel.classList.toggle('open'));
+
+// ---------------------------------------------------------
+// Resize handling (keeps it correct on phones incl. rotation)
+// ---------------------------------------------------------
+function onResize(){
+  const w = window.innerWidth, h = window.innerHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+}
+window.addEventListener('resize', onResize);
+window.addEventListener('orientationchange', onResize);
+
+// ---------------------------------------------------------
+// Render loop
+// ---------------------------------------------------------
+function animate(){
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+</script>
+</body>
+</html>
