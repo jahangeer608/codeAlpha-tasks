@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Employee Engagement Survey</title>
+<style>
+:root{
+  --desk: #26332F;
+  --paper: #EFE8D6;
+  --paper-2: #E4DAC0;
+  --ink: #23241F;
+  --ink-soft: #5B5A4E;
+  --line: #B9AD8B;
+  --teal: #3E6E62;
+  --teal-dark: #2C4F46;
+  --good: #2E7D32;
+  --warn: #A6392B;
+  --font-display: "Segoe UI", "Space Grotesk", sans-serif;
+  --font-body: "Segoe UI", Arial, sans-serif;
+  --font-mono: "Consolas", "IBM Plex Mono", monospace;
+}
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
+*{ box-sizing: border-box; }
+body{
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(ellipse at top, rgba(255,255,255,0.04), transparent 60%), var(--desk);
+  font-family: var(--font-body);
+  color: var(--ink);
+  padding: 40px 18px 70px;
+}
+.wrap{ max-width: 900px; margin: 0 auto; }
+
+.header{ text-align: center; margin-bottom: 30px; }
+.header__title{
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 24px;
+  color: #F4EFE1;
+  margin: 0 0 6px;
+}
+.header__sub{ margin: 0; color: #A9B6AE; font-size: 14px; }
+
+.tabs{ display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; padding: 0 12px; }
+.tab{
+  appearance: none; border: none; cursor: pointer;
+  background: var(--paper-2); color: var(--ink-soft);
+  font-family: var(--font-body); font-weight: 600; font-size: 14px;
+  padding: 12px 18px; border-radius: 10px 10px 0 0;
+  transform: translateY(6px);
+  transition: transform .18s ease, background .18s ease, color .18s ease;
+}
+.tab:hover{ transform: translateY(2px); }
+.tab.is-active{ background: var(--paper); color: var(--ink); transform: translateY(0); }
+.tab:focus-visible{ outline: 2px solid #F4EFE1; outline-offset: 2px; }
+.tab[disabled]{ opacity: .45; cursor: not-allowed; }
+
+.panel-wrap{ position: relative; }
+.panel{
+  background: var(--paper);
+  border-radius: 4px 12px 12px 12px;
+  box-shadow: 0 24px 50px rgba(0,0,0,0.35);
+  padding: 36px 40px;
+  animation: settle .3s ease both;
+}
+.panel[hidden]{ display: none; }
+@keyframes settle{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+
+.eyebrow{
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--teal-dark); margin: 0 0 6px;
+}
+.panel h1{ font-family: var(--font-display); font-size: 30px; margin: 0 0 6px; color: var(--ink); }
+.panel > p.lead{ color: var(--ink-soft); font-size: 14.5px; line-height: 1.6; max-width: 68ch; margin: 0 0 22px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+
+.scale-note{
+  background: rgba(62,110,98,0.08);
+  border: 1px dashed var(--line);
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-bottom: 22px;
+}
+.shared-note{
+  background: rgba(62,110,98,0.08);
+  border: 1px dashed var(--teal);
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  margin-bottom: 22px;
+}
+.shared-note.warn-note{
+  background: rgba(166,57,43,0.08);
+  border-color: var(--warn);
+}
+
+.settings-box{ margin-bottom: 20px; }
+.settings-toggle{
+  appearance: none; cursor: pointer; border: 1px dashed var(--line);
+  background: var(--paper-2); color: var(--teal-dark); font-weight: 600;
+  font-size: 12.5px; padding: 8px 14px; border-radius: 6px;
+}
+.settings-toggle:hover{ background: var(--paper); }
+.settings-fields{
+  margin-top: 12px; padding: 16px 18px; background: var(--paper-2);
+  border: 1px solid var(--line); border-radius: 8px;
+  display: grid; gap: 12px; max-width: 420px;
+}
+.settings-label{
+  display: flex; flex-direction: column; gap: 5px;
+  font-size: 12.5px; color: var(--ink-soft); font-weight: 600;
+}
+.settings-label .opt-tag{ font-weight: 400; font-style: italic; }
+.settings-label input{
+  font-family: var(--font-body); font-size: 14px; color: var(--ink);
+  background: var(--paper); border: 1px solid var(--line); border-radius: 6px;
+  padding: 8px 10px; font-weight: 400;
+}
+.settings-label input:focus-visible{ outline: 2px solid var(--teal); outline-offset: 1px; }
+.settings-status{ font-size: 12px; color: var(--good); margin: 0; }
+
+h2.section{
+  font-family: var(--font-display); font-size: 16px; font-weight: 700;
+  color: var(--teal-dark); border-bottom: 1px solid var(--line);
+  padding-bottom: 8px; margin: 26px 0 14px;
+}
+
+/* --- form controls --- */
+fieldset.q{
+  border: none; margin: 0 0 20px; padding: 0 0 18px;
+  border-bottom: 1px solid var(--line);
+}
+fieldset.q legend{
+  font-size: 14.5px; line-height: 1.5; padding: 0; margin: 0 0 12px;
+  color: var(--ink);
+}
+fieldset.q legend b{ color: var(--teal-dark); margin-right: 6px; }
+.scale-row{ display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.scale-opt{
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  font-family: var(--font-mono); font-size: 11px; color: var(--ink-soft);
+}
+.scale-opt input{ width: 18px; height: 18px; accent-color: var(--teal); cursor: pointer; }
+.scale-endcap{ font-size: 11px; color: var(--ink-soft); max-width: 90px; line-height: 1.3; }
+.scale-endcap.right{ text-align: right; }
+
+textarea{
+  width: 100%; min-height: 74px; resize: vertical;
+  font-family: var(--font-body); font-size: 14px; color: var(--ink);
+  background: var(--paper-2); border: 1px solid var(--line); border-radius: 6px;
+  padding: 10px 12px;
+}
+textarea:focus-visible{ outline: 2px solid var(--teal); outline-offset: 1px; }
+
+.q-error{ font-size: 12.5px; color: var(--warn); margin-top: 6px; display: none; }
+fieldset.q.has-error legend{ color: var(--warn); }
+fieldset.q.has-error .q-error{ display: block; }
+
+.submit-row{ display: flex; align-items: center; gap: 14px; margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+.btn{
+  appearance: none; cursor: pointer; border: 1px solid var(--teal);
+  background: var(--teal); color: #F4EFE1; font-weight: 700;
+  font-size: 14px; padding: 12px 22px; border-radius: 6px;
+  transition: background .15s ease, color .15s ease, opacity .15s ease;
+}
+.btn:hover{ background: var(--teal-dark); }
+.btn:disabled{ opacity: .5; cursor: not-allowed; }
+.btn.ghost{
+  background: transparent; color: var(--teal-dark); font-weight: 600;
+}
+.btn.ghost:hover{ background: var(--teal); color: #F4EFE1; }
+.btn.warn{ background: transparent; border-color: var(--warn); color: var(--warn); }
+.btn.warn:hover{ background: var(--warn); color: #F4EFE1; }
+.submit-status{ font-size: 13px; color: var(--ink-soft); }
+
+.thankyou{ text-align: center; padding: 30px 10px; }
+.thankyou h2{ font-family: var(--font-display); font-size: 22px; margin: 0 0 10px; color: var(--teal-dark); }
+.thankyou p{ color: var(--ink-soft); font-size: 14.5px; margin: 0 0 20px; }
+
+/* data table */
+.table-scroll{ overflow-x: auto; margin-bottom: 20px; }
+table{ border-collapse: collapse; width: 100%; font-size: 13.5px; }
+thead th{
+  background: #1F3327; color: #F4EFE1; font-weight: 700;
+  padding: 9px 10px; text-align: center; font-size: 12.5px;
+}
+thead th:first-child{ text-align: left; }
+tbody td{ padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: center; }
+tbody td:first-child{ text-align: left; font-weight: 500; }
+tbody tr:nth-child(even){ background: rgba(0,0,0,0.03); }
+.score-good{ color: var(--good); font-weight: 700; }
+.score-warn{ color: var(--warn); font-weight: 700; }
+
+.overall{
+  font-family: var(--font-display); font-weight: 700; font-size: 20px;
+  color: var(--teal-dark); margin: 18px 0 26px;
+}
+.count-chip{
+  display: inline-block; font-family: var(--font-mono); font-size: 12px;
+  background: var(--paper-2); border: 1px solid var(--line); border-radius: 999px;
+  padding: 4px 12px; color: var(--ink-soft); margin-bottom: 18px;
+}
+
+.empty-state{
+  text-align: center; padding: 50px 20px; color: var(--ink-soft);
+}
+.empty-state h3{ font-family: var(--font-display); color: var(--teal-dark); margin: 0 0 8px; font-size: 18px; }
+.empty-state p{ font-size: 14px; margin: 0; }
+
+.open-block{ margin: 26px 0; }
+.open-block h3{ font-size: 14px; margin: 0 0 10px; color: var(--teal-dark); }
+.open-item{
+  background: var(--paper-2); border-left: 3px solid var(--teal);
+  border-radius: 4px; padding: 10px 14px; margin-bottom: 8px;
+  font-size: 13.5px; line-height: 1.5;
+}
+
+.report p{ font-size: 14.5px; line-height: 1.65; margin: 0 0 14px; }
+.report ul{ margin: 0 0 14px; padding-left: 20px; font-size: 14.5px; line-height: 1.6; }
+.report ul li{ margin-bottom: 6px; }
+.meta-line{ font-size: 13px; color: var(--ink-soft); font-style: italic; margin: -4px 0 20px; }
+
+.btn-row{ display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+
+@media (max-width: 640px){
+  .panel{ padding: 26px 20px; }
+  .panel h1{ font-size: 24px; }
+  table{ font-size: 12px; }
+  .scale-endcap{ display: none; }
+}
+
+@media print{
+  body{ background: #fff; padding: 0; }
+  .tabs, .btn-row, .submit-row{ display: none !important; }
+  .panel{ box-shadow: none; display: block !important; }
+  .panel[hidden]{ display: none !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="header">
+    <p class="header__title" id="header-title">Employee Engagement &amp; Satisfaction Survey</p>
+    <p class="header__sub" id="header-sub">Your Organization &middot; Anonymous &middot; Live responses</p>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Survey sections">
+    <button class="tab is-active" role="tab" aria-selected="true" aria-controls="panel-survey" id="tab-survey" data-target="panel-survey">Take Survey</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="panel-data" id="tab-data" data-target="panel-data">Live Results</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="panel-report" id="tab-report" data-target="panel-report">Summary Report</button>
+  </nav>
+
+  <div class="panel-wrap">
+
+    <!-- ============ PANEL 1: SURVEY ============ -->
+    <section class="panel is-active" id="panel-survey" role="tabpanel" aria-labelledby="tab-survey">
+      <div id="survey-form-wrap">
+        <p class="eyebrow">Anonymous &middot; ~5 minutes</p>
+        <h1>Employee Engagement Survey</h1>
+        <p class="lead" id="survey-lead">This survey helps us understand how employees experience their work, their team, and the organization as a whole. Your honest feedback is confidential and used only to improve the workplace.</p>
+
+        <div class="settings-box" id="settings-box">
+          <button type="button" class="settings-toggle" id="settings-toggle">⚙ Customize for your organization</button>
+          <div class="settings-fields" id="settings-fields" hidden>
+            <label class="settings-label">Organization name
+              <input type="text" id="settings-company" placeholder="e.g. Riverbend Manufacturing">
+            </label>
+            <label class="settings-label">Industry <span class="opt-tag">(optional)</span>
+              <input type="text" id="settings-industry" placeholder="e.g. logistics, healthcare, retail, SaaS">
+            </label>
+            <div class="btn-row" style="margin-top:12px;">
+              <button type="button" class="btn ghost" id="settings-save-btn">Save</button>
+            </div>
+          </div>
+        </div>
+
+        <p class="scale-note">Rating Scale (Q1–Q12): 1 = Strongly Disagree &nbsp;·&nbsp; 2 = Disagree &nbsp;·&nbsp; 3 = Neutral &nbsp;·&nbsp; 4 = Agree &nbsp;·&nbsp; 5 = Strongly Agree</p>
+        <p class="shared-note" id="persistence-note">This demo stores responses so results can aggregate across submissions. It starts with 5 sample responses so you can preview Live Results and the Summary Report; clear them anytime from the Live Results tab.</p>
+
+        <h2 class="section">Part 1 — Rating Questions</h2>
+        <form id="likert-form"></form>
+
+        <h2 class="section">Part 2 — Open Response</h2>
+        <form id="open-form"></form>
+
+        <div class="submit-row">
+          <button type="button" class="btn" id="submit-btn">Submit response</button>
+          <span class="submit-status" id="submit-status"></span>
+        </div>
+      </div>
+
+      <div class="thankyou" id="thankyou-wrap" hidden>
+        <h2>Thank you — your response was recorded.</h2>
+        <p>It's been added to the anonymous pool. You can view live results once enough responses are in.</p>
+        <div class="btn-row" style="justify-content:center;">
+          <button type="button" class="btn ghost" id="another-btn">Submit another response</button>
+          <button type="button" class="btn ghost" id="view-results-btn">View live results</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PANEL 2: LIVE RESULTS ============ -->
+    <section class="panel" id="panel-data" role="tabpanel" aria-labelledby="tab-data" hidden>
+      <p class="eyebrow" id="results-eyebrow">Live &middot; computed from submitted responses</p>
+      <h1>Live Results</h1>
+      <p class="lead">Aggregated scores update automatically as new responses come in. Results are hidden until enough responses exist, to protect anonymity.</p>
+
+      <div id="results-body"></div>
+
+      <div class="btn-row">
+        <button type="button" class="btn ghost" id="refresh-results-btn">Refresh</button>
+        <button type="button" class="btn ghost" id="restore-sample-btn">Restore sample responses</button>
+        <button type="button" class="btn ghost" id="export-csv-btn">Export CSV</button>
+        <button type="button" class="btn warn" id="reset-btn">Clear all responses</button>
+      </div>
+    </section>
+
+    <!-- ============ PANEL 3: SUMMARY REPORT ============ -->
+    <section class="panel report" id="panel-report" role="tabpanel" aria-labelledby="tab-report" hidden>
+      <p class="eyebrow">Auto-generated from current response pool</p>
+      <h1>Summary Report</h1>
+      <p class="meta-line" id="report-date"></p>
+
+      <div id="report-body"></div>
+
+      <div class="btn-row">
+        <button type="button" class="btn ghost" id="refresh-report-btn">Refresh</button>
+        <button class="btn ghost" data-print>Print this report</button>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+  const MIN_RESPONSES_TO_SHOW = 3;
+  const STORAGE_PREFIX = "engagement-response:";
+  const SETTINGS_KEY = "engagement-settings";
+  const SEED_MARKER_KEY = "engagement-seed-marker";
+  const DEFAULT_SETTINGS = { company: "Your Organization", industry: "" };
+  let currentSettings = { ...DEFAULT_SETTINGS };
+
+  // ---------- Storage layer ----------
+  // Wraps window.storage (cloud, persists across sessions/users) with an in-memory
+  // fallback (this browser tab only) so the app keeps working even when the
+  // persistent-storage API isn't available in the current render context.
+  const memoryStore = new Map();
+  let usedRealStorage = false;
+  let usedMemoryFallback = false;
+
+  const hasRealStorage = () => typeof window.storage !== "undefined";
+
+  async function storageSet(key, value) {
+    if (hasRealStorage()) {
+      for (const shared of [true, false]) {
+        try {
+          const r = await window.storage.set(key, value, shared);
+          if (r) { usedRealStorage = true; return r; }
+        } catch (e) { console.error(`storage.set failed (shared=${shared}):`, e); }
+      }
+    }
+    memoryStore.set(key, value);
+    usedMemoryFallback = true;
+    return { key, value };
+  }
+
+  async function storageGet(key) {
+    if (hasRealStorage()) {
+      for (const shared of [true, false]) {
+        try {
+          const r = await window.storage.get(key, shared);
+          if (r) return r;
+        } catch (e) { /* not found in this scope, try next */ }
+      }
+    }
+    if (memoryStore.has(key)) return { key, value: memoryStore.get(key) };
+    throw new Error(`Key not found: ${key}`);
+  }
+
+  async function storageList(prefix) {
+    let keys = [];
+    if (hasRealStorage()) {
+      for (const shared of [true, false]) {
+        try {
+          const r = await window.storage.list(prefix, shared);
+          if (r && r.keys) { keys = keys.concat(r.keys); usedRealStorage = true; }
+        } catch (e) { console.error(`storage.list failed (shared=${shared}):`, e); }
+      }
+    }
+    const memKeys = Array.from(memoryStore.keys()).filter(k => k.startsWith(prefix));
+    if (memKeys.length) usedMemoryFallback = true;
+    return { keys: Array.from(new Set([...keys, ...memKeys])) };
+  }
+
+  async function storageDelete(key) {
+    let ok = false;
+    if (hasRealStorage()) {
+      for (const shared of [true, false]) {
+        try { await window.storage.delete(key, shared); ok = true; } catch (e) { /* ignore */ }
+      }
+    }
+    if (memoryStore.has(key)) { memoryStore.delete(key); ok = true; }
+    return ok;
+  }
+
+  function updatePersistenceNote() {
+    const note = document.getElementById("persistence-note");
+    if (!note) return;
+    if (usedRealStorage && !usedMemoryFallback) {
+      note.textContent = "Responses are saved to shared storage and aggregate across everyone using this artifact.";
+      note.classList.remove("warn-note");
+    } else if (usedMemoryFallback) {
+      note.textContent = "Persistent storage isn't available in this view, so responses are being kept in this browser tab only (they'll be lost on reload and won't be shared with others). Everything still works for demoing the flow — for durable storage, open this artifact directly on claude.ai.";
+      note.classList.add("warn-note");
+    } else {
+      note.textContent = "This demo stores responses so results can aggregate across submissions. It starts with 5 sample responses so you can preview Live Results and the Summary Report; clear them anytime from the Live Results tab.";
+    }
+  }
+
+  // ---------- Question definitions ----------
+  const likertQuestions = [
+    { key: "Q1 Job satisfaction",            text: "Overall, I am satisfied with my job." },
+    { key: "Q2 Feels valued",                text: "I feel valued for the work I do." },
+    { key: "Q3 Has right resources",         text: "I have the resources and tools I need to do my job effectively." },
+    { key: "Q4 Manager feedback",            text: "My manager provides clear direction and constructive feedback." },
+    { key: "Q5 Growth opportunities",        text: "I see clear opportunities for growth and career development here." },
+    { key: "Q6 Comfortable sharing ideas",   text: "I feel comfortable sharing my opinions and ideas at work." },
+    { key: "Q7 Communication effectiveness", text: "The organization communicates changes and decisions effectively." },
+    { key: "Q8 Work-life balance",           text: "I am able to maintain a healthy work-life balance." },
+    { key: "Q9 Feels recognized",            text: "I feel recognized and appreciated for my achievements." },
+    { key: "Q10 Team collaboration",         text: "Collaboration within my team / department is strong." },
+    { key: "Q11 Would recommend org",        text: "I would recommend this organization as a great place to work." },
+    { key: "Q12 Sees future here",           text: "I see myself working here 12 months from now." }
+  ];
+  const openQuestions = [
+    { key: "enjoy",    text: "What do you enjoy most about working here?" },
+    { key: "improve",  text: "What is one thing the organization could improve?" },
+    { key: "comments", text: "Any additional comments or suggestions?" }
+  ];
+
+  const avg = (arr) => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+  const uid = () => Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 9);
+
+  // ---------- Settings (organization name / industry) ----------
+  async function loadSettings() {
+    try {
+      const r = await storageGet(SETTINGS_KEY);
+      if (r && r.value) return { ...DEFAULT_SETTINGS, ...JSON.parse(r.value) };
+    } catch (e) { /* not set yet */ }
+    return { ...DEFAULT_SETTINGS };
+  }
+
+  async function saveSettings(settings) {
+    try {
+      const r = await storageSet(SETTINGS_KEY, JSON.stringify(settings));
+      return !!r;
+    } catch (e) {
+      console.error("Settings save failed:", e);
+      return false;
+    }
+  }
+
+  function applySettingsToUI(settings) {
+    currentSettings = settings;
+    const industrySuffix = settings.industry ? ` (${settings.industry})` : "";
+    document.getElementById("header-sub").textContent = `${settings.company} · Anonymous · Live responses`;
+    document.title = `Employee Engagement Survey — ${settings.company}`;
+    document.getElementById("survey-lead").textContent =
+      `This survey helps ${settings.company} understand how employees experience their work, their team, and the organization as a whole${industrySuffix}. Your honest feedback is confidential and used only to improve the workplace.`;
+    document.getElementById("settings-company").value = settings.company === DEFAULT_SETTINGS.company ? "" : settings.company;
+    document.getElementById("settings-industry").value = settings.industry || "";
+  }
+
+  // ---------- Sample data (seeds ~5 responses once, so results/report have something to show) ----------
+  function buildSampleRecords() {
+    const sampleLikert = [
+      [5,5,4,4,3,5,3,4,4,5,5,5],
+      [4,3,4,3,2,4,3,3,2,4,3,3],
+      [3,3,3,2,3,3,2,3,3,4,3,3],
+      [4,4,5,4,4,4,4,2,3,5,4,4],
+      [3,4,3,3,3,4,3,2,2,4,3,3]
+    ];
+    const sampleOpen = [
+      { enjoy: "The people I work with and the trust my manager gives me.", improve: "Better visibility into how decisions get made at the top.", comments: "" },
+      { enjoy: "Flexible hours and a team that actually collaborates well.", improve: "Recognition — good work often goes unnoticed.", comments: "Would like more consistent 1:1s." },
+      { enjoy: "Learning new things regularly.", improve: "Clearer path for promotions.", comments: "" },
+      { enjoy: "Strong team culture and psychological safety to speak up.", improve: "Workload during crunch periods.", comments: "Otherwise a solid place to work." },
+      { enjoy: "Autonomy over how I do my work.", improve: "More proactive communication when company decisions are made.", comments: "" }
+    ];
+    return sampleLikert.map((vals, i) => ({
+      id: `sample-${i}`,
+      submittedAt: new Date(Date.now() - (5 - i) * 86400000).toISOString(),
+      isSample: true,
+      likert: likertQuestions.map((q, qi) => ({ key: q.key, value: vals[qi] })),
+      open: sampleOpen[i]
+    }));
+  }
+
+  async function seedSampleDataIfNeeded() {
+    let alreadySeeded = false;
+    try {
+      const r = await storageGet(SEED_MARKER_KEY);
+      if (r && r.value) alreadySeeded = true;
+    } catch (e) { /* not seeded yet */ }
+    if (alreadySeeded) return;
+
+    const samples = buildSampleRecords();
+    for (const rec of samples) {
+      try { await storageSet(STORAGE_PREFIX + rec.id, JSON.stringify(rec)); }
+      catch (e) { console.error("Seed write failed:", e); }
+    }
+    try { await storageSet(SEED_MARKER_KEY, "true"); }
+    catch (e) { console.error("Seed marker write failed:", e); }
+  }
+
+  async function restoreSampleData() {
+    try { await storageDelete(SEED_MARKER_KEY); } catch (e) { /* ignore */ }
+    await seedSampleDataIfNeeded();
+    renderResults();
+  }
+
+  // ---------- Build survey form ----------
+  const likertForm = document.getElementById("likert-form");
+  const likertFieldsets = [];
+  likertQuestions.forEach((q, i) => {
+    const fs = document.createElement("fieldset");
+    fs.className = "q";
+    fs.dataset.qkey = q.key;
+    const opts = [1,2,3,4,5].map(v => `
+      <label class="scale-opt">
+        <input type="radio" name="likert-${i}" value="${v}" aria-label="${v}">
+        ${v}
+      </label>`).join("");
+    fs.innerHTML = `
+      <legend><b>Q${i+1}.</b> ${q.text}</legend>
+      <div class="scale-row">
+        <span class="scale-endcap">Strongly disagree</span>
+        ${opts}
+        <span class="scale-endcap right">Strongly agree</span>
+      </div>
+      <p class="q-error">Please select a rating for this question.</p>`;
+    likertForm.appendChild(fs);
+    likertFieldsets.push(fs);
+  });
+
+  const openForm = document.getElementById("open-form");
+  openQuestions.forEach((q, i) => {
+    const fs = document.createElement("fieldset");
+    fs.className = "q";
+    fs.style.borderBottom = i === openQuestions.length - 1 ? "none" : "";
+    fs.innerHTML = `
+      <legend><b>Q${i+13}.</b> ${q.text} <span style="font-family:var(--font-mono);font-size:11px;font-style:italic;color:var(--ink-soft);">(optional)</span></legend>
+      <textarea name="open-${q.key}" rows="3"></textarea>`;
+    openForm.appendChild(fs);
+  });
+
+  // ---------- Submit handling ----------
+  const submitBtn = document.getElementById("submit-btn");
+  const submitStatus = document.getElementById("submit-status");
+  const surveyFormWrap = document.getElementById("survey-form-wrap");
+  const thankyouWrap = document.getElementById("thankyou-wrap");
+
+  async function submitResponse() {
+    let firstInvalid = null;
+    const likertVals = [];
+    likertQuestions.forEach((q, i) => {
+      const fs = likertFieldsets[i];
+      const checked = likertForm.querySelector(`input[name="likert-${i}"]:checked`);
+      if (!checked) {
+        fs.classList.add("has-error");
+        if (!firstInvalid) firstInvalid = fs;
+      } else {
+        fs.classList.remove("has-error");
+        likertVals.push({ key: q.key, value: Number(checked.value) });
+      }
+    });
+
+    if (firstInvalid) {
+      firstInvalid.scrollIntoView({ behavior: "smooth", block: "center" });
+      submitStatus.textContent = "Please answer every rating question before submitting.";
+      submitStatus.style.color = "var(--warn)";
+      return;
+    }
+
+    const openVals = {};
+    openQuestions.forEach(q => {
+      const ta = openForm.querySelector(`textarea[name="open-${q.key}"]`);
+      openVals[q.key] = (ta.value || "").trim();
+    });
+
+    submitBtn.disabled = true;
+    submitStatus.textContent = "Submitting…";
+    submitStatus.style.color = "var(--ink-soft)";
+
+    const record = {
+      id: uid(),
+      submittedAt: new Date().toISOString(),
+      isSample: false,
+      likert: likertVals,
+      open: openVals
+    };
+
+    try {
+      await storageSet(STORAGE_PREFIX + record.id, JSON.stringify(record));
+      console.log(`Saved response ${record.id} (realStorage=${usedRealStorage}, memoryFallback=${usedMemoryFallback})`);
+      updatePersistenceNote();
+      surveyFormWrap.hidden = true;
+      thankyouWrap.hidden = false;
+      submitStatus.textContent = "";
+    } catch (err) {
+      console.error("Storage error:", err);
+      submitStatus.textContent = "Couldn't save your response: " + (err.message || err) + " Please try again.";
+      submitStatus.style.color = "var(--warn)";
+    } finally {
+      submitBtn.disabled = false;
+    }
+  }
+
+  submitBtn.addEventListener("click", submitResponse);
+
+  document.getElementById("another-btn").addEventListener("click", () => {
+    likertForm.querySelectorAll("input[type=radio]:checked").forEach(r => r.checked = false);
+    openForm.querySelectorAll("textarea").forEach(t => t.value = "");
+    likertForm.querySelectorAll("fieldset.q").forEach(fs => fs.classList.remove("has-error"));
+    surveyFormWrap.hidden = false;
+    thankyouWrap.hidden = true;
+    submitBtn.disabled = false;
+    submitStatus.textContent = "";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  document.getElementById("view-results-btn").addEventListener("click", () => activate("panel-data"));
+  document.getElementById("refresh-results-btn").addEventListener("click", renderResults);
+  document.getElementById("restore-sample-btn").addEventListener("click", restoreSampleData);
+  document.getElementById("refresh-report-btn").addEventListener("click", renderReport);
+
+  // ---------- Fetch + aggregate all responses ----------
+  async function fetchAllResponses() {
+    const { keys } = await storageList(STORAGE_PREFIX);
+    const records = [];
+    for (const key of keys) {
+      try {
+        const r = await storageGet(key);
+        if (r && r.value) {
+          const rec = JSON.parse(r.value);
+          if (rec && rec.id) records.push(rec);
+        }
+      } catch (e) { console.error(`Failed to read ${key}:`, e); }
+    }
+    return records;
+  }
+
+  function computeStats(records) {
+    const perQuestion = {};
+    likertQuestions.forEach(q => perQuestion[q.key] = []);
+    records.forEach(rec => {
+      (rec.likert || []).forEach(item => {
+        if (perQuestion[item.key]) perQuestion[item.key].push(item.value);
+      });
+    });
+    const rows = likertQuestions.map(q => {
+      const vals = perQuestion[q.key];
+      return { key: q.key, text: q.text, vals, avgScore: avg(vals) };
+    });
+    const answeredRows = rows.filter(r => r.vals.length);
+    const overallAvg = avg(answeredRows.map(r => r.avgScore));
+    const sorted = [...answeredRows].sort((a, b) => b.avgScore - a.avgScore);
+    const strongest = sorted.slice(0, 2);
+    const weakest = sorted.slice(-2).reverse();
+    const openTexts = { enjoy: [], improve: [], comments: [] };
+    records.forEach(rec => {
+      Object.keys(openTexts).forEach(k => {
+        const v = rec.open && rec.open[k];
+        if (v) openTexts[k].push(v);
+      });
+    });
+    return { rows, overallAvg, strongest, weakest, openTexts, count: records.length };
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // ---------- Render Live Results panel ----------
+  async function renderResults() {
+    const body = document.getElementById("results-body");
+    body.innerHTML = `<div class="empty-state"><h3>Loading…</h3></div>`;
+    let records;
+    try {
+      records = await fetchAllResponses();
+    } catch (err) {
+      body.innerHTML = `
+        <div class="empty-state">
+          <h3>Couldn't load results</h3>
+          <p>${escapeHtml(err.message || String(err))}</p>
+          <div class="btn-row" style="justify-content:center;margin-top:14px;">
+            <button type="button" class="btn ghost" id="retry-results-btn">Try again</button>
+          </div>
+        </div>`;
+      document.getElementById("retry-results-btn").addEventListener("click", renderResults);
+      return;
+    }
+    const stats = computeStats(records);
+    console.log(`Live Results: found ${records.length} response(s)`);
+    updatePersistenceNote();
+
+    if (stats.count === 0) {
+      body.innerHTML = `
+        <div class="empty-state">
+          <h3>No responses yet</h3>
+          <p>Take the survey to see live results appear here.</p>
+        </div>`;
+      return;
+    }
+
+    if (stats.count < MIN_RESPONSES_TO_SHOW) {
+      body.innerHTML = `
+        <div class="empty-state">
+          <h3>${stats.count} response${stats.count === 1 ? "" : "s"} collected</h3>
+          <p>Results are hidden until at least ${MIN_RESPONSES_TO_SHOW} responses are in, to protect anonymity.</p>
+        </div>`;
+      return;
+    }
+
+    const rowsHtml = stats.rows.map(r => {
+      if (!r.vals.length) return `<tr><td>${r.text}</td><td colspan="2" style="color:var(--ink-soft);font-style:italic;">No data</td></tr>`;
+      const cls = r.avgScore >= 4 ? "score-good" : r.avgScore <= 3 ? "score-warn" : "";
+      return `<tr><td>${r.text}</td><td>${r.vals.length}</td><td class="${cls}">${r.avgScore.toFixed(1)}</td></tr>`;
+    }).join("");
+
+    const openHtml = Object.entries(stats.openTexts).map(([k, arr]) => {
+      if (!arr.length) return "";
+      const label = { enjoy: "What people enjoy most", improve: "What people would improve", comments: "Additional comments" }[k];
+      const items = arr.map(t => `<div class="open-item">${escapeHtml(t)}</div>`).join("");
+      return `<div class="open-block"><h3>${label}</h3>${items}</div>`;
+    }).join("");
+
+    const sampleCount = records.filter(r => r.isSample).length;
+    const countNote = sampleCount > 0
+      ? `${stats.count} response${stats.count === 1 ? "" : "s"} collected (includes ${sampleCount} sample)`
+      : `${stats.count} response${stats.count === 1 ? "" : "s"} collected`;
+
+    body.innerHTML = `
+      <span class="count-chip">${countNote}</span>
+      <div class="overall">Overall Engagement Score: ${stats.overallAvg.toFixed(2)} / 5.0 (${Math.round((stats.overallAvg / 5) * 100)}%)</div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Statement</th><th># Answered</th><th>Avg</th></tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </div>
+      ${openHtml}`;
+  }
+
+  // ---------- Render Summary Report panel ----------
+  async function renderReport() {
+    const body = document.getElementById("report-body");
+    document.getElementById("report-date").textContent =
+      `${currentSettings.company} · ` + new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+
+    let records;
+    try {
+      records = await fetchAllResponses();
+    } catch (err) {
+      body.innerHTML = `
+        <div class="empty-state">
+          <h3>Couldn't load the report</h3>
+          <p>${escapeHtml(err.message || String(err))}</p>
+          <div class="btn-row" style="justify-content:center;margin-top:14px;">
+            <button type="button" class="btn ghost" id="retry-report-btn">Try again</button>
+          </div>
+        </div>`;
+      document.getElementById("retry-report-btn").addEventListener("click", renderReport);
+      return;
+    }
+    const stats = computeStats(records);
+    console.log(`Summary Report: found ${records.length} response(s)`);
+
+    if (stats.count < MIN_RESPONSES_TO_SHOW) {
+      body.innerHTML = `
+        <div class="empty-state">
+          <h3>Not enough data yet</h3>
+          <p>The report generates automatically once at least ${MIN_RESPONSES_TO_SHOW} responses are collected. Currently: ${stats.count}.</p>
+        </div>`;
+      return;
+    }
+
+    const strongestList = stats.strongest.map(r => `<li><b>${r.text}</b> — avg ${r.avgScore.toFixed(1)}/5</li>`).join("");
+    const weakestList = stats.weakest.map(r => `<li><b>${r.text}</b> — avg ${r.avgScore.toFixed(1)}/5</li>`).join("");
+
+    const improvementIdeas = {
+      "Q9 Feels recognized": "Introduce regular, lightweight recognition (peer shout-outs, manager check-ins) rather than relying only on formal reviews.",
+      "Q8 Work-life balance": "Review after-hours workload expectations, particularly for roles that scored lowest.",
+      "Q5 Growth opportunities": "Publish clearer promotion criteria and create individual development conversations each quarter.",
+      "Q7 Communication effectiveness": "Establish a consistent channel (e.g. monthly update) for sharing decisions that affect employees.",
+      "Q4 Manager feedback": "Coach managers on giving specific, timely feedback rather than saving it for annual reviews.",
+      "Q3 Has right resources": "Audit tooling and resourcing gaps by team to identify quick fixes.",
+      "Q2 Feels valued": "Build recognition and appreciation into regular team rituals.",
+      "Q1 Job satisfaction": "Run focused listening sessions to understand what's driving lower satisfaction.",
+      "Q6 Comfortable sharing ideas": "Reinforce psychological safety through visible follow-through on raised concerns.",
+      "Q10 Team collaboration": "Clarify team roles and handoffs where collaboration friction appears.",
+      "Q11 Would recommend org": "Address the specific drivers behind lower scores in this area directly with affected teams.",
+      "Q12 Sees future here": "Have career-path conversations with employees showing lower retention intent."
+    };
+    const recs = stats.weakest.map(r => `<li>${improvementIdeas[r.key] || "Investigate drivers behind this score and address with a targeted action."}</li>`).join("");
+
+    body.innerHTML = `
+      <h2 class="section">1. Overview &amp; Methodology</h2>
+      <p>A 15-question Employee Engagement Survey was distributed anonymously at ${currentSettings.company}${currentSettings.industry ? ` (${currentSettings.industry})` : ""} and completed by ${stats.count} employee${stats.count === 1 ? "" : "s"} so far. Twelve questions used a 1–5 rating scale (Strongly Disagree to Strongly Agree) covering satisfaction, recognition, growth, communication, work–life balance, and collaboration; three questions were open-ended. The overall engagement score across all respondents and rating questions is ${stats.overallAvg.toFixed(2)} / 5.0 (${Math.round((stats.overallAvg / 5) * 100)}%).</p>
+
+      <h2 class="section">2. Key Findings</h2>
+      <ul>
+        <li>Strongest area${stats.strongest.length > 1 ? "s" : ""}: ${stats.strongest.map(r => `${r.text} (avg ${r.avgScore.toFixed(1)}/5)`).join("; ")}.</li>
+        <li>Weakest area${stats.weakest.length > 1 ? "s" : ""}: ${stats.weakest.map(r => `${r.text} (avg ${r.avgScore.toFixed(1)}/5)`).join("; ")}.</li>
+        <li>Overall engagement score: ${stats.overallAvg.toFixed(2)}/5 across ${stats.count} response${stats.count === 1 ? "" : "s"}.</li>
+      </ul>
+
+      <h2 class="section">3. Strengths to Protect</h2>
+      <ul>${strongestList}</ul>
+
+      <h2 class="section">4. Areas for Improvement</h2>
+      <ul>${weakestList}</ul>
+
+      <h2 class="section">5. Recommendations</h2>
+      <ul>
+        ${recs}
+        <li>Continue collecting responses and re-check this report as the sample grows — small samples can shift quickly.</li>
+      </ul>
+
+      <h2 class="section">6. Conclusion</h2>
+      <p>This report recalculates automatically from every response currently stored. Re-open this tab after more responses come in to see updated findings, or run a fresh survey cycle in 3–6 months to track whether follow-up actions moved the score.</p>`;
+  }
+
+  // ---------- Export / Reset ----------
+  document.getElementById("export-csv-btn").addEventListener("click", async () => {
+    let records;
+    try {
+      records = await fetchAllResponses();
+    } catch (err) {
+      alert("Couldn't load responses to export: " + (err.message || err));
+      return;
+    }
+    if (!records.length) { alert("No responses to export yet."); return; }
+    const headers = ["id", "submittedAt", "isSample", ...likertQuestions.map(q => q.key), ...openQuestions.map(q => q.key)];
+    const lines = [headers.join(",")];
+    records.forEach(rec => {
+      const likertMap = {};
+      (rec.likert || []).forEach(item => likertMap[item.key] = item.value);
+      const row = [
+        rec.id,
+        rec.submittedAt,
+        rec.isSample ? "true" : "false",
+        ...likertQuestions.map(q => likertMap[q.key] ?? ""),
+        ...openQuestions.map(q => `"${((rec.open && rec.open[q.key]) || "").replace(/"/g, '""')}"`)
+      ];
+      lines.push(row.join(","));
+    });
+    const blob = new Blob([lines.join("\n")], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "engagement-survey-responses.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById("reset-btn").addEventListener("click", async () => {
+    if (!confirm("This clears all responses stored by this artifact. Continue?")) return;
+    const { keys } = await storageList(STORAGE_PREFIX);
+    for (const key of keys) {
+      try { await storageDelete(key); } catch (e) { console.error(e); }
+    }
+    renderResults();
+  });
+
+  // ---------- Tabs ----------
+  const tabs = Array.from(document.querySelectorAll(".tab"));
+  const panels = Array.from(document.querySelectorAll(".panel"));
+
+  function activate(targetId) {
+    tabs.forEach((tab) => {
+      const match = tab.dataset.target === targetId;
+      tab.classList.toggle("is-active", match);
+      tab.setAttribute("aria-selected", String(match));
+    });
+    panels.forEach((panel) => {
+      const match = panel.id === targetId;
+      panel.classList.toggle("is-active", match);
+      if (match) panel.removeAttribute("hidden");
+      else panel.setAttribute("hidden", "");
+    });
+    if (targetId === "panel-data") renderResults();
+    if (targetId === "panel-report") renderReport();
+  }
+
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", () => activate(tab.dataset.target));
+  });
+
+  const tabList = document.querySelector(".tabs");
+  tabList.addEventListener("keydown", (e) => {
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    const current = tabs.findIndex(t => t.classList.contains("is-active"));
+    const next = e.key === "ArrowRight" ? (current + 1) % tabs.length : (current - 1 + tabs.length) % tabs.length;
+    tabs[next].focus();
+    activate(tabs[next].dataset.target);
+  });
+
+  document.querySelectorAll("[data-print]").forEach((btn) => {
+    btn.addEventListener("click", () => window.print());
+  });
+
+  // ---------- Settings UI wiring ----------
+  const settingsToggle = document.getElementById("settings-toggle");
+  const settingsFields = document.getElementById("settings-fields");
+  settingsToggle.addEventListener("click", () => {
+    settingsFields.hidden = !settingsFields.hidden;
+  });
+  document.getElementById("settings-save-btn").addEventListener("click", async () => {
+    const company = document.getElementById("settings-company").value.trim() || DEFAULT_SETTINGS.company;
+    const industry = document.getElementById("settings-industry").value.trim();
+    const settings = { company, industry };
+    const saveBtn = document.getElementById("settings-save-btn");
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Saving…";
+    const ok = await saveSettings(settings);
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Save";
+    applySettingsToUI(settings);
+    renderReport();
+    if (!ok) console.warn("Settings saved to memory fallback only (not persisted).");
+  });
+
+  // ---------- Init ----------
+  (async function init() {
+    const settings = await loadSettings();
+    applySettingsToUI(settings);
+    await seedSampleDataIfNeeded();
+    updatePersistenceNote();
+  })();
+});
+
+</script>
+
+</body>
+</html>

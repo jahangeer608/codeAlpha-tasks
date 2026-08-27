@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lingo Board · Translator</title>
+<meta name="description" content="A fast, free, global text translator with voice input, pronunciation, and saved phrases." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body data-view="translate" data-theme="dark">
+
+  <div class="app-shell">
+
+    <!-- Top app bar -->
+    <header class="app-bar">
+      <div class="app-brand">
+        <span class="app-logo">✈</span>
+        <div>
+          <h1 class="app-title">Lingo Board</h1>
+          <p class="app-subtitle">Now boarding: your words</p>
+        </div>
+      </div>
+
+      <div class="app-bar-right">
+        <div class="stat-chip" id="statChip" title="Translations today">
+          <span class="stat-num" id="statNum">0</span>
+          <span class="stat-label">today</span>
+        </div>
+        <span class="offline-pill" id="offlinePill" hidden>Offline</span>
+        <button id="themeToggle" class="icon-toggle" aria-label="Toggle light/dark theme" title="Toggle theme">
+          <span id="themeIcon">☾</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ============================= TRANSLATE PANEL ============================= -->
+    <main class="panel panel-translate" data-panel="translate" aria-label="Translate">
+
+      <section class="board" aria-label="Language route selector">
+        <div class="board-row">
+          <div class="board-cell">
+            <label class="board-label" for="sourceLang">
+              FROM
+              <span class="detected-badge" id="detectedBadge" hidden></span>
+            </label>
+            <select id="sourceLang" class="board-select"></select>
+          </div>
+
+          <button id="swapBtn" class="swap-btn" aria-label="Swap languages" title="Swap languages">
+            <span class="swap-icon">⇄</span>
+          </button>
+
+          <div class="board-cell">
+            <label class="board-label" for="targetLang">TO</label>
+            <select id="targetLang" class="board-select"></select>
+          </div>
+        </div>
+        <div class="board-strip" id="boardStrip">EN&nbsp;&nbsp;→&nbsp;&nbsp;FR</div>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <span class="card-eyebrow">DEPARTING TEXT</span>
+          <span class="char-count" id="charCount">0 / 1000</span>
+        </div>
+        <textarea
+          id="sourceText"
+          class="text-area"
+          maxlength="1000"
+          placeholder="Type or paste text to translate… (Enter to translate, Shift+Enter for a new line)"
+          aria-label="Text to translate"
+        ></textarea>
+        <div class="card-foot card-foot--three">
+          <button id="clearBtn" class="ghost-btn">Clear</button>
+          <button id="dictateBtn" class="ghost-btn" title="Dictate using your microphone">🎤 Dictate</button>
+          <button id="sourcePronounceBtn" class="ghost-btn" disabled title="Hear the departing text read aloud">🔊 Pronounce</button>
+        </div>
+      </section>
+
+      <button id="translateBtn" class="translate-btn">
+        <span class="translate-btn-text">Translate</span>
+        <span class="translate-btn-icon">→</span>
+      </button>
+
+      <section class="card ticket" id="resultCard" aria-live="polite">
+        <div class="ticket-perf"></div>
+        <div class="card-head">
+          <span class="card-eyebrow">ARRIVING TEXT</span>
+          <span class="status-pill" id="statusPill">Ready</span>
+        </div>
+
+        <div id="resultBody" class="result-body">
+          <p class="placeholder-text" id="placeholderText">Your translation will land here.</p>
+        </div>
+
+        <div class="card-foot result-actions">
+          <button id="copyBtn" class="ghost-btn" disabled>📋 Copy</button>
+          <button id="resultPronounceBtn" class="ghost-btn" disabled>🔊 Pronounce</button>
+          <button id="saveBtn" class="ghost-btn" disabled>☆ Save</button>
+        </div>
+      </section>
+
+      <p class="api-note">Translations via the free MyMemory API, with automatic fallback to Lingva if it's unreachable. Occasional inaccuracies are possible — always double-check anything important.</p>
+    </main>
+
+    <!-- ============================= SAVED PANEL ============================= -->
+    <section class="panel panel-saved" data-panel="saved" aria-label="Saved translations">
+      <div class="panel-heading">
+        <h2>Saved translations</h2>
+        <span class="panel-count" id="savedCount">0</span>
+      </div>
+      <div id="savedList" class="saved-list">
+        <p class="empty-state" id="savedEmpty">Nothing saved yet. Tap ☆ Save on a translation to keep it here.</p>
+      </div>
+    </section>
+
+    <!-- ============================= SETTINGS PANEL ============================= -->
+    <section class="panel panel-settings" data-panel="settings" aria-label="Settings">
+      <div class="panel-heading">
+        <h2>Settings</h2>
+      </div>
+
+      <div class="settings-group">
+        <span class="settings-label">Appearance</span>
+        <div class="segmented" id="themeSegmented" role="radiogroup" aria-label="Theme">
+          <button class="segmented-btn is-active" data-theme-choice="dark" role="radio" aria-checked="true">🌙 Dark</button>
+          <button class="segmented-btn" data-theme-choice="light" role="radio" aria-checked="false">☀ Light</button>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <label class="settings-label" for="rateSlider">Voice speed — <span id="rateValue">1.0×</span></label>
+        <input type="range" id="rateSlider" min="0.6" max="1.6" step="0.1" value="1" />
+      </div>
+
+      <div class="settings-group">
+        <label class="settings-label" for="quotaEmail">Contact email (raises free daily quota)</label>
+        <input type="email" id="quotaEmail" class="text-input" placeholder="you@example.com" />
+        <p class="settings-hint">Optional. MyMemory uses this only to lift the anonymous ~5,000 char/day limit to ~50,000, per their public API terms. Stored only on this device.</p>
+      </div>
+
+      <div class="settings-group">
+        <button id="clearSavedBtn" class="ghost-btn ghost-btn--danger">Clear all saved translations</button>
+      </div>
+
+      <p class="settings-hint settings-about">Lingo Board is a free, client-side translator. No account, no tracking — language pairs and saved phrases live only in this browser.</p>
+    </section>
+
+    <!-- Bottom nav — switches the visible panel on narrow screens; on wide screens all panels show at once and this hides. -->
+    <nav class="bottom-nav" aria-label="Sections">
+      <button class="nav-item is-active" data-view-target="translate">
+        <span class="nav-icon">🌐</span>
+        <span class="nav-label">Translate</span>
+      </button>
+      <button class="nav-item" data-view-target="saved">
+        <span class="nav-icon">⭐</span>
+        <span class="nav-label">Saved</span>
+      </button>
+      <button class="nav-item" data-view-target="settings">
+        <span class="nav-icon">⚙</span>
+        <span class="nav-label">Settings</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
