@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BloomHome &mdash; Smart Home App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="phone">
+  <div class="phone-notch"></div>
+
+  <div class="app-screen">
+
+    <!-- ===== STATUS BAR ===== -->
+    <div class="status-bar">
+      <span id="statusClock">9:41</span>
+      <div class="status-icons">
+        <span>&#128246;</span><span>&#128294;</span><span>&#128267;</span>
+      </div>
+    </div>
+
+    <!-- ===== HEADER ===== -->
+    <header class="app-header">
+      <div>
+        <p class="greet-eyebrow" id="greetEyebrow">Good morning</p>
+        <h1>Aisha's Home</h1>
+      </div>
+      <div class="header-actions">
+        <button class="icon-circle-btn" id="briefingBtn" type="button" aria-label="Read home briefing aloud">&#128266;</button>
+        <button class="avatar-btn" id="notifBtn" type="button" aria-label="View notifications">
+          <span class="avatar">AK</span>
+          <span class="badge" id="notifBadge">3</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ===== PAGES ===== -->
+    <main class="pages">
+
+      <!-- HOME PAGE -->
+      <section class="page active" id="page-home">
+
+        <div class="pulse-hero">
+          <svg viewBox="0 0 120 120" class="pulse-ring" aria-hidden="true">
+            <circle cx="60" cy="60" r="50" class="pulse-track"></circle>
+            <circle cx="60" cy="60" r="50" class="pulse-progress" id="pulseProgress"></circle>
+          </svg>
+          <div class="pulse-center">
+            <span id="pulseValue">--</span>
+            <small>Home Pulse</small>
+          </div>
+        </div>
+
+        <div class="stat-scroll">
+          <div class="stat-chip">
+            <p class="stat-label">Active</p>
+            <p class="stat-value" id="statActiveDevices">0<span>/12</span></p>
+          </div>
+          <div class="stat-chip">
+            <p class="stat-label">Energy</p>
+            <p class="stat-value" id="statEnergy">0.0<span>kWh</span></p>
+          </div>
+          <div class="stat-chip">
+            <p class="stat-label">Temp</p>
+            <p class="stat-value"><span id="statTemp">--</span><span id="tempUnitLabel">&deg;C</span></p>
+          </div>
+          <div class="stat-chip">
+            <p class="stat-label">Humidity</p>
+            <p class="stat-value" id="statHumidity">--<span>%</span></p>
+          </div>
+        </div>
+
+        <p class="section-title">Quick controls</p>
+        <div class="quick-grid" id="quickGrid"><!-- injected --></div>
+
+        <p class="section-title">Recent activity</p>
+        <ul class="activity-log" id="activityLog"><!-- injected --></ul>
+      </section>
+
+      <!-- DEVICES PAGE -->
+      <section class="page" id="page-devices">
+        <div class="room-chips" id="roomNav">
+          <button class="chip active" data-room="all">All</button>
+          <button class="chip" data-room="living">Living Room</button>
+          <button class="chip" data-room="kitchen">Kitchen</button>
+          <button class="chip" data-room="bedroom">Bedroom</button>
+          <button class="chip" data-room="security">Security</button>
+        </div>
+        <label for="deviceSearch" class="sr-only-visually-hidden" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Search a device</label>
+        <input type="text" id="deviceSearch" class="search-input" placeholder="Search a device" aria-label="Search a device" />
+        <div class="device-grid" id="deviceGrid"><!-- injected --></div>
+      </section>
+
+      <!-- ENERGY PAGE -->
+      <section class="page" id="page-energy">
+        <div class="card">
+          <p class="section-title no-margin">Live energy usage</p>
+          <canvas id="energyChart" height="180"></canvas>
+        </div>
+        <div class="card thermostat-card">
+          <p class="section-title no-margin">Thermostat</p>
+          <div class="thermo-control">
+            <button id="thermoDown" class="thermo-btn" type="button" aria-label="Decrease temperature">&minus;</button>
+            <div class="thermo-reading"><span id="thermoValue">21</span><span id="thermoUnit">&deg;C</span></div>
+            <button id="thermoUp" class="thermo-btn" type="button" aria-label="Increase temperature">+</button>
+          </div>
+          <input type="range" id="thermoSlider" min="16" max="28" value="21" aria-label="Thermostat temperature" />
+        </div>
+      </section>
+
+      <!-- SECURITY PAGE -->
+      <section class="page" id="page-security">
+        <div class="card security-card">
+          <div class="panel-head">
+            <p class="section-title no-margin">System status</p>
+            <button id="armToggle" class="arm-btn armed" type="button">Armed</button>
+          </div>
+          <div class="cam-grid">
+            <div class="cam-tile">
+              <div class="cam-feed cam-a"></div>
+              <span class="cam-label">Front Door <em class="live-dot"></em></span>
+            </div>
+            <div class="cam-tile">
+              <div class="cam-feed cam-b"></div>
+              <span class="cam-label">Backyard <em class="live-dot"></em></span>
+            </div>
+          </div>
+        </div>
+        <p class="section-title">Security devices</p>
+        <div class="device-grid" id="securityGrid"><!-- injected --></div>
+      </section>
+
+      <!-- PROFILE PAGE -->
+      <section class="page" id="page-profile">
+        <div class="card profile-card">
+          <span class="avatar avatar-lg">AK</span>
+          <h2>Aisha Khan</h2>
+          <p class="profile-sub">4 rooms &middot; 12 devices connected</p>
+        </div>
+
+        <div class="card">
+          <p class="section-title no-margin">Preferences</p>
+
+          <div class="pref-row">
+            <div>
+              <div class="pref-label">Temperature unit</div>
+              <div class="pref-sub">Applies to Home and Energy tabs</div>
+            </div>
+            <div class="unit-toggle" role="group" aria-label="Temperature unit">
+              <button type="button" id="unitCBtn" aria-pressed="true">&deg;C</button>
+              <button type="button" id="unitFBtn" aria-pressed="false">&deg;F</button>
+            </div>
+          </div>
+
+          <div class="pref-row" style="flex-direction:column; align-items:stretch;">
+            <div>
+              <div class="pref-label">Voice &amp; accessibility</div>
+              <div class="pref-sub" id="voiceSupportNote">Choose a voice for spoken briefings and device status.</div>
+            </div>
+            <select class="voice-select" id="voiceSelect" aria-label="Voice for pronunciation"></select>
+            <button class="pref-btn" id="repeatBriefingBtn" type="button">&#128266; Repeat last briefing</button>
+          </div>
+        </div>
+
+        <div class="card list-card">
+          <button class="list-row" data-info="household" type="button">Household members <span>&rsaquo;</span></button>
+          <button class="list-row" data-info="notifications" type="button">Notification settings <span>&rsaquo;</span></button>
+          <button class="list-row" data-info="network" type="button">Network &amp; hub status <span>&rsaquo;</span></button>
+          <button class="list-row" data-info="help" type="button">Help &amp; support <span>&rsaquo;</span></button>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ===== BOTTOM NAV ===== -->
+    <nav class="bottom-nav">
+      <button class="nav-btn active" data-page="home" type="button">
+        <span class="nav-ico">&#8962;</span><span>Home</span>
+      </button>
+      <button class="nav-btn" data-page="devices" type="button">
+        <span class="nav-ico">&#9889;</span><span>Devices</span>
+      </button>
+      <button class="nav-btn" data-page="energy" type="button">
+        <span class="nav-ico">&#128200;</span><span>Energy</span>
+      </button>
+      <button class="nav-btn" data-page="security" type="button">
+        <span class="nav-ico">&#128274;</span><span>Security</span>
+      </button>
+      <button class="nav-btn" data-page="profile" type="button">
+        <span class="nav-ico">&#128100;</span><span>Profile</span>
+      </button>
+    </nav>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
