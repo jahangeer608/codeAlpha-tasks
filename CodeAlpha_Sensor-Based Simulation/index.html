@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Client-side IoT sensor simulation: virtual Temperature, Light and Motion sensors drive a simulated LED through microcontroller-style logic, with a live serial monitor and spoken status readout." />
+<meta name="color-scheme" content="dark" />
+<title>IoT Sensor Simulation &mdash; LED Control Board</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body data-sensor="temperature">
+
+  <header class="board-header">
+    <div class="header-left">
+      <span class="chip">MCU&#8209;SIM</span>
+      <h1>Sensor&nbsp;&rarr;&nbsp;Logic&nbsp;&rarr;&nbsp;LED</h1>
+    </div>
+    <div class="status-pill" id="systemStatus">
+      <span class="dot" id="systemDot"></span>
+      <span id="systemStatusText">SYSTEM IDLE</span>
+    </div>
+  </header>
+
+  <main class="board">
+
+    <!-- Dashboard stats -->
+    <section class="panel stats-panel" aria-label="Live dashboard stats">
+      <div class="stat">
+        <span class="stat-label">Uptime</span>
+        <span class="stat-value" id="statUptime">00:00:00</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Active Sensor</span>
+        <span class="stat-value" id="statSensor">Temperature</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">LED Activations</span>
+        <span class="stat-value" id="statActivations">0</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">LED On&#8209;time</span>
+        <span class="stat-value" id="statOnTime">00:00:00</span>
+      </div>
+    </section>
+
+    <!-- Sensor select -->
+    <section class="panel" id="sensorSelectPanel">
+      <h2><span class="tag">01</span> Choose Sensor</h2>
+      <div class="sensor-tabs" id="sensorTabs" role="tablist" aria-label="Sensor type">
+        <button class="tab active" data-sensor="temperature" role="tab" aria-selected="true">&#127777; Temperature</button>
+        <button class="tab" data-sensor="light" role="tab" aria-selected="false">&#128161; Light (LDR)</button>
+        <button class="tab" data-sensor="motion" role="tab" aria-selected="false">&#128694; Motion (PIR)</button>
+      </div>
+    </section>
+
+    <div class="grid">
+
+      <!-- Sensor input -->
+      <section class="panel" id="sensorInputPanel">
+        <h2><span class="tag">02</span> Sensor Input</h2>
+
+        <div class="sensor-view" data-view="temperature">
+          <label for="tempRange">Temperature: <span id="tempValue">25</span>&deg;<span id="tempUnitLabel">C</span></label>
+          <input type="range" id="tempRange" min="-10" max="50" value="25" aria-describedby="tempRule" />
+          <div class="unit-toggle" role="group" aria-label="Temperature unit">
+            <button class="unit-btn active" data-unit="C" id="unitC">&deg;C</button>
+            <button class="unit-btn" data-unit="F" id="unitF">&deg;F</button>
+          </div>
+          <p class="rule" id="tempRule">Rule: LED turns <b>ON</b> when temperature &gt; <span id="tempThreshVal">30</span>&deg;C</p>
+          <label class="thresh-label">Threshold
+            <input type="number" id="tempThresh" value="30" min="-10" max="50" />
+          </label>
+        </div>
+
+        <div class="sensor-view hidden" data-view="light">
+          <label for="lightRange">Ambient Light: <span id="lightValue">600</span> lux</label>
+          <input type="range" id="lightRange" min="0" max="1000" value="600" aria-describedby="lightRule" />
+          <p class="rule" id="lightRule">Rule: LED turns <b>ON</b> when light &lt; <span id="lightThreshVal">200</span> lux (it's dark)</p>
+          <label class="thresh-label">Threshold
+            <input type="number" id="lightThresh" value="200" min="0" max="1000" />
+          </label>
+        </div>
+
+        <div class="sensor-view hidden" data-view="motion">
+          <p class="rule">Rule: LED turns <b>ON</b> for 4s whenever motion is detected (PIR pulse).</p>
+          <button class="motion-btn" id="motionBtn">&#11044; Trigger Motion Pulse</button>
+          <label class="thresh-label">Hold time
+            <input type="number" id="motionHold" value="4" min="1" max="15" /> s
+          </label>
+          <div class="pir-timeline" id="pirTimeline" aria-label="Motion pulse history"></div>
+        </div>
+      </section>
+
+      <!-- Circuit visual -->
+      <section class="panel circuit-panel" id="circuitPanel">
+        <h2><span class="tag">03</span> Live Circuit</h2>
+        <svg viewBox="0 0 320 160" class="circuit-svg" id="circuitSvg" role="img" aria-label="Circuit diagram: sensor connected to microcontroller connected to LED">
+          <rect x="10" y="60" width="70" height="40" rx="6" class="node-box sensor-box" />
+          <text x="45" y="84" class="node-label">SENSOR</text>
+
+          <line x1="80" y1="80" x2="130" y2="80" class="wire" id="wire1" />
+          <circle class="current-dot" id="dot1a" r="2.5" />
+          <circle class="current-dot" id="dot1b" r="2.5" />
+
+          <rect x="130" y="55" width="80" height="50" rx="6" class="node-box mcu-box" />
+          <text x="170" y="76" class="node-label">MCU</text>
+          <text x="170" y="92" class="node-sub" id="mcuLogicText">if(cond)</text>
+
+          <line x1="210" y1="80" x2="255" y2="80" class="wire" id="wire2" />
+          <circle class="current-dot" id="dot2a" r="2.5" />
+          <circle class="current-dot" id="dot2b" r="2.5" />
+
+          <circle cx="280" cy="80" r="22" class="led-circle" id="ledCircle" />
+          <text x="280" y="85" class="led-label" id="ledLabel">LED</text>
+        </svg>
+        <div class="led-readout">
+          <span class="led-indicator" id="ledIndicatorDot"></span>
+          <span id="ledStateText">LED: OFF</span>
+        </div>
+      </section>
+    </div>
+
+    <!-- Serial monitor -->
+    <section class="panel monitor-panel">
+      <h2>
+        <span class="tag">04</span> Serial Monitor
+        <span class="panel-controls">
+          <button class="icon-btn" id="pronounceToggle" type="button" aria-pressed="false" title="Read status changes aloud">&#128264; Pronounce: Off</button>
+          <button class="icon-btn" id="clearLogBtn" type="button" title="Clear the log">&#10005; Clear</button>
+          <button class="icon-btn" id="downloadLogBtn" type="button" title="Download the log as a text file">&#8681; Save</button>
+        </span>
+      </h2>
+      <div class="monitor" id="monitor" role="log" aria-live="polite"></div>
+    </section>
+
+    <!-- Code explanation -->
+    <section class="panel code-panel">
+      <h2><span class="tag">05</span> Code Explanation</h2>
+      <pre id="codeBlock" class="code-block"></pre>
+    </section>
+
+  </main>
+
+  <footer class="board-footer">
+    <p>Runs entirely client&#8209;side &mdash; no hardware, no server, no external accounts. Move the sliders / tap the buttons to change sensor readings. Works in any modern desktop or mobile browser.</p>
+  </footer>
+
+  <div class="sr-only" id="srAnnouncer" aria-live="polite"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>

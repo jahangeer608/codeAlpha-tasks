@@ -1,0 +1,25 @@
+{
+  "name": "Lane — Fitness Tracker",
+  "short_name": "Lane",
+  "description": "Track steps, calories, and active minutes. Works fully offline.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F3F6F0",
+  "theme_color": "#1F6F5C",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%231F6F5C'/%3E%3Ccircle cx='96' cy='96' r='58' fill='none' stroke='%23ffffff' stroke-width='14'/%3E%3Cpath d='M96 38 A58 58 0 0 1 154 96' fill='none' stroke='%234FB894' stroke-width='14' stroke-linecap='round'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%231F6F5C'/%3E%3Ccircle cx='96' cy='96' r='58' fill='none' stroke='%23ffffff' stroke-width='14'/%3E%3Cpath d='M96 38 A58 58 0 0 1 154 96' fill='none' stroke='%234FB894' stroke-width='14' stroke-linecap='round'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

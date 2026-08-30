@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mechanical Drawing — Flange Designer</title>
+<style>
+/* =========================================
+   GLOBAL
+========================================= */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #eef3f7;
+  --panel: #ffffff;
+  --border: #d6dee7;
+
+  --dark: #131c25;
+  --text: #253746;
+  --muted: #6d7d8c;
+
+  --accent: #1d7db3;
+  --accent-dark: #145a82;
+  --accent-light: #e6f3fb;
+
+  --good: #1f9d63;
+  --good-light: #e5f7ee;
+  --danger: #d64545;
+  --danger-light: #fdecec;
+
+  --drawing: #ffffff;
+  --line: #16212b;
+  --construction: #7a8a96;
+  --hidden: #9aa7b0;
+  --dimension: #1d7db3;
+
+  --radius: 14px;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; scroll-behavior: auto !important; }
+}
+
+button { font-family: inherit; }
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+a:focus-visible {
+  outline: 3px solid #ffb703;
+  outline-offset: 2px;
+}
+
+/* =========================================
+   HEADER
+========================================= */
+.app-header {
+  background: var(--dark);
+  color: white;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 14px rgba(0,0,0,0.18);
+}
+
+.brand { display: flex; align-items: center; gap: 12px; }
+
+.brand-icon {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  background: linear-gradient(145deg, #24384a, #1a2733);
+  border: 1px solid #33495c;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+
+.brand h1 { font-size: 19px; font-weight: 700; letter-spacing: 0.2px; }
+.brand p { color: #9fb0bd; font-size: 12px; margin-top: 2px; }
+
+.header-right { display: flex; align-items: center; gap: 16px; }
+
+.status {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 11px; font-weight: 700; letter-spacing: 1px;
+}
+
+.status-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #4bd37b; box-shadow: 0 0 8px #4bd37b;
+}
+
+.unit-toggle {
+  display: flex; border: 1px solid #33495c; border-radius: 8px; overflow: hidden;
+}
+.unit-toggle button {
+  background: #1c2933; color: #b7c4cd; border: none;
+  padding: 7px 12px; font-size: 11px; font-weight: 700; cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.unit-toggle button[aria-pressed="true"] {
+  background: var(--accent); color: white;
+}
+.unit-toggle button:hover:not([aria-pressed="true"]) { background: #26343f; }
+
+/* =========================================
+   MAIN
+========================================= */
+.app-container { width: min(1200px, 94%); margin: 24px auto; }
+
+/* =========================================
+   BANNER (validation / status messages)
+========================================= */
+.banner {
+  display: flex; align-items: center; gap: 10px;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 14px;
+  border: 1px solid transparent;
+  animation: slideIn 0.2s ease;
+}
+.banner.error { background: var(--danger-light); color: #9c2b2b; border-color: #f3c6c6; }
+.banner.success { background: var(--good-light); color: #14663f; border-color: #bfe8d3; }
+.banner[hidden] { display: none; }
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================================
+   PANELS
+========================================= */
+.info-panel, .controls-panel, .export-panel, .a11y-panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 18px;
+  box-shadow: 0 5px 20px rgba(35, 55, 70, 0.06);
+}
+
+.panel-heading {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px; flex-wrap: wrap; gap: 10px;
+}
+
+.panel-heading h2, .controls-heading h2, .export-panel h2, .a11y-panel h2 {
+  font-size: 18px; color: var(--dark);
+}
+
+.panel-heading p, .controls-heading p, .export-panel p, .a11y-panel p {
+  font-size: 12px; color: var(--muted); margin-top: 4px;
+}
+
+.part-badge {
+  background: var(--accent-light); color: var(--accent);
+  border: 1px solid #c4e3f3;
+  padding: 7px 10px; border-radius: 6px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.3px;
+}
+
+.dimension-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+
+.dimension-card {
+  background: #f7f9fb; border: 1px solid var(--border);
+  border-radius: 9px; padding: 13px;
+  transition: background 0.2s;
+}
+.dimension-card span { display: block; color: var(--muted); font-size: 11px; margin-bottom: 6px; }
+.dimension-card strong { color: var(--dark); font-size: 17px; }
+
+/* =========================================
+   DRAWING
+========================================= */
+.drawing-section {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 5px 20px rgba(35, 55, 70, 0.06);
+  margin-bottom: 18px;
+}
+
+.drawing-toolbar {
+  min-height: 58px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+  background: #f9fbfc;
+  flex-wrap: wrap; gap: 10px;
+}
+
+.drawing-title { font-size: 12px; font-weight: 800; letter-spacing: 1.2px; color: var(--dark); }
+.drawing-scale { font-size: 10px; color: var(--muted); margin-left: 12px; }
+
+.toolbar-actions { display: flex; gap: 8px; }
+
+.tool-button {
+  border: 1px solid var(--border); background: white; color: var(--text);
+  border-radius: 6px; padding: 7px 12px; cursor: pointer; font-size: 12px;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.tool-button:hover { border-color: var(--accent); color: var(--accent); }
+
+.drawing-wrapper {
+  width: 100%; overflow: auto;
+  background:
+    repeating-linear-gradient(0deg, #dfe8ef 0px, #dfe8ef 1px, #e7edf2 1px, #e7edf2 28px),
+    repeating-linear-gradient(90deg, #dfe8ef 0px, #dfe8ef 1px, #e7edf2 1px, #e7edf2 28px);
+  padding: 15px;
+}
+
+#technicalDrawing {
+  display: block; width: 100%; min-width: 700px; height: auto;
+  background: var(--drawing);
+  border: 1px solid #c9d3dc;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Smooth geometry transitions when dimensions change */
+#technicalDrawing circle,
+#technicalDrawing rect,
+#technicalDrawing line,
+#technicalDrawing polygon,
+#technicalDrawing text {
+  transition: r 0.3s ease, cx 0.3s ease, cy 0.3s ease,
+              width 0.3s ease, height 0.3s ease, x 0.3s ease, y 0.3s ease,
+              x1 0.3s ease, x2 0.3s ease, y1 0.3s ease, y2 0.3s ease,
+              points 0.3s ease, opacity 0.3s ease;
+}
+
+/* =========================================
+   SVG DRAWING STYLES
+========================================= */
+.drawing-background { fill: white; }
+.object-line { fill: none; stroke: var(--line); stroke-width: 3; }
+.construction-line { fill: none; stroke: var(--construction); stroke-width: 1.5; stroke-dasharray: 8 5; }
+.hidden-line { fill: none; stroke: var(--hidden); stroke-width: 1.6; stroke-dasharray: 5 4; }
+.center-line { stroke: #587381; stroke-width: 1.2; stroke-dasharray: 14 5 3 5; }
+.dimension-line { stroke: var(--dimension); stroke-width: 1.6; }
+.extension-line { stroke: var(--dimension); stroke-width: 1; }
+.dimension-arrow { fill: var(--dimension); }
+.dimension-text { fill: var(--dimension); font-family: Arial, sans-serif; font-size: 16px; font-weight: 700; }
+.view-title { fill: var(--dark); font-family: Arial, sans-serif; font-size: 17px; font-weight: 800; letter-spacing: 1px; text-anchor: middle; }
+.notes-box { fill: #fafcfd; stroke: #9daab5; stroke-width: 1; }
+.notes-title { fill: var(--dark); font-size: 12px; font-weight: 800; }
+.notes-text { fill: #536674; font-size: 10px; }
+
+/* =========================================
+   CONTROLS
+========================================= */
+.controls-heading { margin-bottom: 18px; }
+.control-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+.control-item { display: block; color: var(--muted); font-size: 11px; font-weight: 600; }
+
+.input-wrapper {
+  display: flex; align-items: center; margin-top: 7px;
+  border: 1px solid var(--border); border-radius: 7px; overflow: hidden; background: white;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.input-wrapper input { width: 100%; border: none; outline: none; padding: 10px; font-size: 14px; color: var(--dark); }
+.input-wrapper span { padding-right: 10px; color: var(--muted); font-size: 11px; }
+.input-wrapper:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(29, 125, 179, 0.1); }
+.input-wrapper.invalid { border-color: var(--danger); box-shadow: 0 0 0 3px rgba(214, 69, 69, 0.12); }
+
+input[type="range"] {
+  width: 100%; margin-top: 10px; accent-color: var(--accent); cursor: pointer;
+}
+
+/* =========================================
+   BUTTONS
+========================================= */
+.button-row { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+
+.primary-button, .secondary-button, .export-button {
+  border: none; border-radius: 7px; padding: 11px 16px;
+  font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s;
+}
+.primary-button { background: var(--accent); color: white; }
+.primary-button:hover { background: var(--accent-dark); }
+.secondary-button { background: #edf1f4; color: var(--text); }
+.secondary-button:hover { background: #dfe6eb; }
+.primary-button:disabled, .secondary-button:disabled, .export-button:disabled {
+  opacity: 0.5; cursor: not-allowed;
+}
+
+/* =========================================
+   ACCESSIBILITY & SHARING
+========================================= */
+.a11y-grid {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+}
+.voice-select {
+  border: 1px solid var(--border); border-radius: 7px; padding: 9px 10px;
+  font-size: 12px; color: var(--dark); background: white; max-width: 260px;
+}
+.a11y-note { font-size: 11px; color: var(--muted); margin-top: 10px; }
+
+/* =========================================
+   EXPORT
+========================================= */
+.export-panel { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; }
+.export-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+.export-button { background: var(--dark); color: white; }
+.export-button:hover { background: #293a47; }
+
+/* =========================================
+   TECHNICAL INFO
+========================================= */
+.technical-info {
+  background: var(--dark); border-radius: 10px;
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  overflow: hidden; margin-bottom: 18px;
+}
+.info-item { padding: 14px; border-right: 1px solid #2b3c48; }
+.info-item:last-child { border-right: none; }
+.info-item span { display: block; color: #8ea0ac; font-size: 9px; letter-spacing: 1px; margin-bottom: 5px; }
+.info-item strong { color: white; font-size: 11px; }
+
+/* =========================================
+   FOOTER
+========================================= */
+footer { text-align: center; padding: 20px; color: #84939f; font-size: 11px; }
+
+/* =========================================
+   PRINT
+========================================= */
+@media print {
+  .app-header, .drawing-toolbar, .controls-panel, .export-panel,
+  .a11y-panel, .info-panel, .technical-info, footer, .banner { display: none !important; }
+  body { background: white; }
+  .app-container { width: 100%; margin: 0; }
+  .drawing-section { box-shadow: none; border: none; margin: 0; }
+  .drawing-wrapper { background: white; padding: 0; }
+  #technicalDrawing { border: none; box-shadow: none; min-width: 0; }
+}
+
+/* =========================================
+   TABLET
+========================================= */
+@media (max-width: 800px) {
+  .dimension-grid { grid-template-columns: repeat(2, 1fr); }
+  .control-grid { grid-template-columns: repeat(2, 1fr); }
+  .export-panel { flex-direction: column; align-items: flex-start; gap: 15px; }
+  .technical-info { grid-template-columns: repeat(2, 1fr); }
+  .info-item:nth-child(2) { border-right: none; }
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+@media (max-width: 600px) {
+  .app-header { padding: 14px 15px; }
+  .brand-icon { width: 38px; height: 38px; font-size: 20px; }
+  .brand h1 { font-size: 16px; }
+  .brand p { font-size: 10px; }
+  .app-container { width: 96%; margin: 14px auto; }
+  .info-panel, .controls-panel, .export-panel, .a11y-panel { padding: 15px; border-radius: 11px; }
+  .panel-heading { align-items: flex-start; }
+  .panel-heading h2 { font-size: 16px; }
+  .dimension-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .dimension-card { padding: 10px; }
+  .dimension-card strong { font-size: 14px; }
+  .drawing-toolbar { padding: 10px 12px; }
+  .drawing-wrapper { padding: 8px; }
+  .control-grid { grid-template-columns: 1fr; gap: 12px; }
+  .button-row { flex-direction: column; }
+  .primary-button, .secondary-button { width: 100%; }
+  .export-buttons { width: 100%; flex-direction: column; }
+  .export-button { width: 100%; }
+  .technical-info { grid-template-columns: 1fr 1fr; }
+  .info-item { border-right: 1px solid #2b3c48; border-bottom: 1px solid #2b3c48; }
+  .info-item:nth-child(2) { border-right: none; }
+  .info-item:nth-child(3), .info-item:nth-child(4) { border-bottom: none; }
+  .status { display: none; }
+  .a11y-grid { flex-direction: column; align-items: stretch; }
+  .voice-select { max-width: none; }
+}
+</style>
+</head>
+
+<body>
+
+<header class="app-header">
+  <div class="brand">
+    <div class="brand-icon">⚙</div>
+    <div>
+      <h1>Mechanical Drawing</h1>
+      <p>2D Machine Part Designer</p>
+    </div>
+  </div>
+
+  <div class="header-right">
+    <div class="unit-toggle" role="group" aria-label="Units">
+      <button type="button" id="unitMmBtn" aria-pressed="true">MM</button>
+      <button type="button" id="unitInBtn" aria-pressed="false">IN</button>
+    </div>
+    <div class="status">
+      <span class="status-dot"></span>
+      LIVE
+    </div>
+  </div>
+</header>
+
+<main class="app-container">
+
+  <!-- Validation / status banner -->
+  <div id="statusBanner" class="banner" role="alert" aria-live="assertive" hidden></div>
+
+  <!-- Drawing Information -->
+  <section class="info-panel">
+    <div class="panel-heading">
+      <div>
+        <h2>Flange Design</h2>
+        <p>Technical Engineering Drawing</p>
+      </div>
+      <span class="part-badge">PART-001</span>
+    </div>
+
+    <div class="dimension-grid">
+      <div class="dimension-card">
+        <span>Outer Diameter</span>
+        <strong id="outerDiameterDisplay">100 mm</strong>
+      </div>
+      <div class="dimension-card">
+        <span>Inner Diameter</span>
+        <strong id="innerDiameterDisplay">40 mm</strong>
+      </div>
+      <div class="dimension-card">
+        <span>Thickness</span>
+        <strong id="thicknessDisplay">15 mm</strong>
+      </div>
+      <div class="dimension-card">
+        <span>Bolt Circle</span>
+        <strong id="boltCircleDisplay">70 mm</strong>
+      </div>
+    </div>
+  </section>
+
+  <!-- Drawing Area -->
+  <section class="drawing-section">
+    <div class="drawing-toolbar">
+      <div>
+        <span class="drawing-title">TECHNICAL DRAWING</span>
+        <span class="drawing-scale">SCALE 1:1</span>
+      </div>
+      <div class="toolbar-actions">
+        <button id="resetViewBtn" class="tool-button" type="button">Reset View</button>
+      </div>
+    </div>
+
+    <div class="drawing-wrapper" id="drawing-wrapper">
+      <svg id="technicalDrawing" viewBox="0 0 1000 720" preserveAspectRatio="xMidYMid meet"
+           role="img" aria-label="Flange technical drawing, front view, top view and side view">
+
+        <rect x="0" y="0" width="1000" height="720" class="drawing-background" />
+
+        <!-- ============================= FRONT VIEW ============================= -->
+        <g id="frontView">
+          <text x="300" y="55" class="view-title">FRONT VIEW</text>
+
+          <circle id="frontOuter" cx="300" cy="260" r="150" class="object-line" />
+          <circle id="frontInner" cx="300" cy="260" r="60" class="object-line" />
+          <circle id="frontBoltCircle" cx="300" cy="260" r="105" class="construction-line" />
+
+          <g id="frontBoltHoles">
+            <circle cx="300" cy="155" r="15" class="object-line" />
+            <circle cx="405" cy="260" r="15" class="object-line" />
+            <circle cx="300" cy="365" r="15" class="object-line" />
+            <circle cx="195" cy="260" r="15" class="object-line" />
+          </g>
+
+          <line x1="110" y1="260" x2="490" y2="260" class="center-line" />
+          <line x1="300" y1="70" x2="300" y2="450" class="center-line" />
+
+          <!-- Outer diameter dimension -->
+          <line x1="150" y1="490" x2="450" y2="490" class="dimension-line" />
+          <line x1="150" y1="470" x2="150" y2="510" class="extension-line" />
+          <line x1="450" y1="470" x2="450" y2="510" class="extension-line" />
+          <polygon points="150,490 165,484 165,496" class="dimension-arrow" />
+          <polygon points="450,490 435,484 435,496" class="dimension-arrow" />
+          <text id="outerDiameterDimension" x="300" y="480" class="dimension-text" text-anchor="middle">Ø100 mm</text>
+
+          <!-- Inner diameter dimension -->
+          <line x1="240" y1="560" x2="360" y2="560" class="dimension-line" />
+          <line x1="240" y1="540" x2="240" y2="575" class="extension-line" />
+          <line x1="360" y1="540" x2="360" y2="575" class="extension-line" />
+          <text id="innerDiameterDimension" x="300" y="550" class="dimension-text" text-anchor="middle">Ø40 mm</text>
+
+          <!-- Bolt circle dimension -->
+          <text id="boltCircleDimension" x="300" y="600" class="dimension-text" text-anchor="middle" font-size="12">B.C. Ø70 mm × 4 HOLES</text>
+        </g>
+
+        <!-- ============================= TOP VIEW (hidden detail) ============================= -->
+        <g id="topView">
+          <text x="700" y="55" class="view-title">TOP VIEW</text>
+
+          <rect id="topOuter" x="575" y="230" width="250" height="60" class="object-line" />
+          <rect id="topBore" x="650" y="242" width="100" height="36" class="hidden-line" />
+          <line id="topBoltHidden1" x1="647" y1="230" x2="647" y2="290" class="hidden-line" />
+          <line id="topBoltHidden2" x1="753" y1="230" x2="753" y2="290" class="hidden-line" />
+
+          <line x1="550" y1="260" x2="850" y2="260" class="center-line" />
+          <line x1="700" y1="200" x2="700" y2="320" class="center-line" />
+
+          <!-- Outer diameter (width) dimension -->
+          <line id="topDimLine" x1="575" y1="345" x2="825" y2="345" class="dimension-line" />
+          <line id="topExtLeft" x1="575" y1="325" x2="575" y2="360" class="extension-line" />
+          <line id="topExtRight" x1="825" y1="325" x2="825" y2="360" class="extension-line" />
+          <polygon id="topArrowLeft" points="575,345 590,339 590,351" class="dimension-arrow" />
+          <polygon id="topArrowRight" points="825,345 810,339 810,351" class="dimension-arrow" />
+          <text id="topWidthDimension" x="700" y="335" class="dimension-text" text-anchor="middle">Ø100 mm</text>
+
+          <text x="700" y="400" class="notes-text" text-anchor="middle" font-size="10">HIDDEN LINES SHOW BORE &amp; BOLT HOLES THROUGH THICKNESS</text>
+        </g>
+
+        <!-- ============================= RIGHT SIDE VIEW ============================= -->
+        <g id="sideView">
+          <text x="700" y="475" class="view-title">RIGHT SIDE VIEW</text>
+
+          <rect id="sideProfile" x="630" y="520" width="140" height="70" class="object-line" />
+
+          <line x1="600" y1="555" x2="800" y2="555" class="center-line" />
+
+          <!-- Thickness dimension -->
+          <line id="sideDimLine" x1="630" y1="630" x2="770" y2="630" class="dimension-line" />
+          <line id="sideExtLeft" x1="630" y1="610" x2="630" y2="650" class="extension-line" />
+          <line id="sideExtRight" x1="770" y1="610" x2="770" y2="650" class="extension-line" />
+          <polygon id="sideArrowLeft" points="630,630 645,624 645,636" class="dimension-arrow" />
+          <polygon id="sideArrowRight" points="770,630 755,624 755,636" class="dimension-arrow" />
+          <text id="thicknessDimension" x="700" y="620" class="dimension-text" text-anchor="middle">15 mm</text>
+        </g>
+
+        <!-- General Notes -->
+        <g id="notes">
+          <rect x="40" y="620" width="420" height="70" class="notes-box" />
+          <text x="55" y="642" class="notes-title">GENERAL NOTES</text>
+          <text x="55" y="660" class="notes-text">1. ALL DIMENSIONS ARE IN MILLIMETERS</text>
+          <text x="55" y="678" class="notes-text">2. REMOVE ALL BURRS AND SHARP EDGES</text>
+        </g>
+
+      </svg>
+    </div>
+  </section>
+
+  <!-- Controls -->
+  <section class="controls-panel">
+    <div class="controls-heading">
+      <h2>Part Dimensions</h2>
+      <p>Modify dimensions in real time — drag the sliders or type exact values (mm)</p>
+    </div>
+
+    <div class="control-grid">
+      <label class="control-item" for="outerDiameter">
+        <span>Outer Diameter</span>
+        <div class="input-wrapper" id="outerDiameterWrapper">
+          <input type="number" id="outerDiameter" value="100" min="60" max="200" step="1">
+          <span>mm</span>
+        </div>
+        <input type="range" id="outerDiameterRange" min="60" max="200" step="1" value="100" aria-hidden="true" tabindex="-1">
+      </label>
+
+      <label class="control-item" for="innerDiameter">
+        <span>Inner Diameter</span>
+        <div class="input-wrapper" id="innerDiameterWrapper">
+          <input type="number" id="innerDiameter" value="40" min="10" max="80" step="1">
+          <span>mm</span>
+        </div>
+        <input type="range" id="innerDiameterRange" min="10" max="80" step="1" value="40" aria-hidden="true" tabindex="-1">
+      </label>
+
+      <label class="control-item" for="thickness">
+        <span>Thickness</span>
+        <div class="input-wrapper" id="thicknessWrapper">
+          <input type="number" id="thickness" value="15" min="5" max="50" step="1">
+          <span>mm</span>
+        </div>
+        <input type="range" id="thicknessRange" min="5" max="50" step="1" value="15" aria-hidden="true" tabindex="-1">
+      </label>
+
+      <label class="control-item" for="boltCircle">
+        <span>Bolt Circle</span>
+        <div class="input-wrapper" id="boltCircleWrapper">
+          <input type="number" id="boltCircle" value="70" min="30" max="150" step="1">
+          <span>mm</span>
+        </div>
+        <input type="range" id="boltCircleRange" min="30" max="150" step="1" value="70" aria-hidden="true" tabindex="-1">
+      </label>
+    </div>
+
+    <div class="button-row">
+      <button id="updateDrawingBtn" class="primary-button" type="button">↻ Update Drawing</button>
+      <button id="resetDimensionsBtn" class="secondary-button" type="button">Reset Dimensions</button>
+    </div>
+  </section>
+
+  <!-- Accessibility & Sharing -->
+  <section class="a11y-panel">
+    <div class="panel-heading">
+      <div>
+        <h2>Accessibility &amp; Sharing</h2>
+        <p>Have the dimensions read aloud, or share this exact drawing with anyone</p>
+      </div>
+    </div>
+
+    <div class="a11y-grid">
+      <button id="pronounceBtn" class="secondary-button" type="button">🔊 Pronounce Dimensions</button>
+      <select id="voiceSelect" class="voice-select" aria-label="Voice for pronunciation"></select>
+      <button id="shareBtn" class="secondary-button" type="button">🔗 Copy Share Link</button>
+    </div>
+    <p class="a11y-note" id="speechNote">Uses your browser's built-in text-to-speech. Voice choice depends on what your device/browser offers.</p>
+  </section>
+
+  <!-- Export -->
+  <section class="export-panel">
+    <div>
+      <h2>Export Drawing</h2>
+      <p>Save your technical drawing for submission.</p>
+    </div>
+
+    <div class="export-buttons">
+      <button id="printBtn" class="export-button" type="button">🖨 Print / PDF</button>
+      <button id="svgBtn" class="export-button" type="button">↓ Export SVG</button>
+    </div>
+  </section>
+
+  <!-- Drawing Information -->
+  <section class="technical-info">
+    <div class="info-item"><span>DRAWING NO.</span><strong>MD-FLG-001</strong></div>
+    <div class="info-item"><span>PROJECTION</span><strong>ORTHOGRAPHIC</strong></div>
+    <div class="info-item"><span>UNITS</span><strong id="unitsInfo">MILLIMETERS</strong></div>
+    <div class="info-item"><span>REVISION</span><strong>B</strong></div>
+  </section>
+
+</main>
+
+<footer>
+  <p>Mechanical Drawing App • 2D Machine Part Design</p>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  /* =========================================
+     DEFAULTS
+  ========================================= */
+  const DEFAULTS = { outerDiameter: 100, innerDiameter: 40, thickness: 15, boltCircle: 70 };
+
+  /* =========================================
+     STATE
+  ========================================= */
+  let unit = "mm"; // internal values always stored/typed in mm
+
+  /* =========================================
+     ELEMENTS
+  ========================================= */
+  const $ = (id) => document.getElementById(id);
+
+  const outerDiameterInput = $("outerDiameter");
+  const innerDiameterInput = $("innerDiameter");
+  const thicknessInput = $("thickness");
+  const boltCircleInput = $("boltCircle");
+
+  const outerDiameterRange = $("outerDiameterRange");
+  const innerDiameterRange = $("innerDiameterRange");
+  const thicknessRange = $("thicknessRange");
+  const boltCircleRange = $("boltCircleRange");
+
+  const outerDiameterWrapper = $("outerDiameterWrapper");
+  const innerDiameterWrapper = $("innerDiameterWrapper");
+  const thicknessWrapper = $("thicknessWrapper");
+  const boltCircleWrapper = $("boltCircleWrapper");
+
+  const outerDiameterDisplay = $("outerDiameterDisplay");
+  const innerDiameterDisplay = $("innerDiameterDisplay");
+  const thicknessDisplay = $("thicknessDisplay");
+  const boltCircleDisplay = $("boltCircleDisplay");
+
+  const outerDiameterDimension = $("outerDiameterDimension");
+  const innerDiameterDimension = $("innerDiameterDimension");
+  const boltCircleDimension = $("boltCircleDimension");
+  const thicknessDimension = $("thicknessDimension");
+  const topWidthDimension = $("topWidthDimension");
+
+  const frontOuter = $("frontOuter");
+  const frontInner = $("frontInner");
+  const frontBoltCircle = $("frontBoltCircle");
+  const frontBoltHoles = document.querySelectorAll("#frontBoltHoles circle");
+
+  const topOuter = $("topOuter");
+  const topBore = $("topBore");
+  const topBoltHidden1 = $("topBoltHidden1");
+  const topBoltHidden2 = $("topBoltHidden2");
+  const topDimLine = $("topDimLine");
+  const topExtLeft = $("topExtLeft");
+  const topExtRight = $("topExtRight");
+  const topArrowLeft = $("topArrowLeft");
+  const topArrowRight = $("topArrowRight");
+
+  const sideProfile = $("sideProfile");
+  const sideDimLine = $("sideDimLine");
+  const sideExtLeft = $("sideExtLeft");
+  const sideExtRight = $("sideExtRight");
+  const sideArrowLeft = $("sideArrowLeft");
+  const sideArrowRight = $("sideArrowRight");
+
+  const statusBanner = $("statusBanner");
+  const unitMmBtn = $("unitMmBtn");
+  const unitInBtn = $("unitInBtn");
+  const unitsInfo = $("unitsInfo");
+
+  const pronounceBtn = $("pronounceBtn");
+  const voiceSelect = $("voiceSelect");
+  const speechNote = $("speechNote");
+  const shareBtn = $("shareBtn");
+
+  /* =========================================
+     BANNER (replaces blocking alert())
+  ========================================= */
+  let bannerTimer = null;
+  function showBanner(message, type) {
+    statusBanner.textContent = message;
+    statusBanner.className = "banner " + type;
+    statusBanner.hidden = false;
+    clearTimeout(bannerTimer);
+    if (type === "success") {
+      bannerTimer = setTimeout(() => { statusBanner.hidden = true; }, 3500);
+    }
+  }
+  function hideBanner() { statusBanner.hidden = true; }
+
+  /* =========================================
+     UNIT CONVERSION (display only — inputs stay in mm)
+  ========================================= */
+  function formatLength(mm) {
+    if (unit === "in") {
+      return (mm / 25.4).toFixed(2) + " in";
+    }
+    return mm + " mm";
+  }
+
+  function setUnit(newUnit) {
+    unit = newUnit;
+    unitMmBtn.setAttribute("aria-pressed", String(unit === "mm"));
+    unitInBtn.setAttribute("aria-pressed", String(unit === "in"));
+    unitsInfo.textContent = unit === "in" ? "INCHES (display)" : "MILLIMETERS";
+    updateDrawing();
+  }
+
+  unitMmBtn.addEventListener("click", () => setUnit("mm"));
+  unitInBtn.addEventListener("click", () => setUnit("in"));
+
+  /* =========================================
+     READ CURRENT VALUES
+  ========================================= */
+  function getDimensions() {
+    return {
+      outerDiameter: Number(outerDiameterInput.value),
+      innerDiameter: Number(innerDiameterInput.value),
+      thickness: Number(thicknessInput.value),
+      boltCircle: Number(boltCircleInput.value)
+    };
+  }
+
+  function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
+
+  /* =========================================
+     VALIDATE DIMENSIONS (no blocking alert)
+  ========================================= */
+  function validateDimensions(dimensions) {
+    const { outerDiameter, innerDiameter, thickness, boltCircle } = dimensions;
+
+    if ([outerDiameter, innerDiameter, thickness, boltCircle].some(v => Number.isNaN(v))) {
+      return "Please enter a valid number for every dimension.";
+    }
+    if (outerDiameter <= 0 || innerDiameter <= 0 || thickness <= 0 || boltCircle <= 0) {
+      return "All dimensions must be greater than zero.";
+    }
+    if (innerDiameter >= outerDiameter) {
+      return "Inner diameter must be smaller than outer diameter.";
+    }
+    if (boltCircle >= outerDiameter) {
+      return "Bolt circle diameter must be smaller than outer diameter.";
+    }
+    if (boltCircle <= innerDiameter) {
+      return "Bolt circle diameter must be larger than inner diameter.";
+    }
+    return null;
+  }
+
+  function markInvalid(wrapper, isInvalid) {
+    wrapper.classList.toggle("invalid", !!isInvalid);
+  }
+
+  function clearInvalidStates() {
+    [outerDiameterWrapper, innerDiameterWrapper, thicknessWrapper, boltCircleWrapper]
+      .forEach(w => markInvalid(w, false));
+  }
+
+  /* =========================================
+     UPDATE TEXT
+  ========================================= */
+  function updateDimensionText(dimensions) {
+    const { outerDiameter, innerDiameter, thickness, boltCircle } = dimensions;
+
+    outerDiameterDisplay.textContent = formatLength(outerDiameter);
+    innerDiameterDisplay.textContent = formatLength(innerDiameter);
+    thicknessDisplay.textContent = formatLength(thickness);
+    boltCircleDisplay.textContent = formatLength(boltCircle);
+
+    outerDiameterDimension.textContent = `Ø${formatLength(outerDiameter)}`;
+    innerDiameterDimension.textContent = `Ø${formatLength(innerDiameter)}`;
+    thicknessDimension.textContent = formatLength(thickness);
+    topWidthDimension.textContent = `Ø${formatLength(outerDiameter)}`;
+    boltCircleDimension.textContent = `B.C. Ø${formatLength(boltCircle)} × 4 HOLES`;
+  }
+
+  /* =========================================
+     UPDATE FRONT VIEW
+  ========================================= */
+  function updateFrontView(dimensions) {
+    const { outerDiameter, innerDiameter, thickness, boltCircle } = dimensions;
+    const scale = 1.5; // 100 mm = 150 SVG units
+
+    const outerRadius = (outerDiameter / 2) * scale;
+    const innerRadius = (innerDiameter / 2) * scale;
+    const boltRadius = (boltCircle / 2) * scale;
+
+    frontOuter.setAttribute("r", outerRadius);
+    frontInner.setAttribute("r", innerRadius);
+    frontBoltCircle.setAttribute("r", boltRadius);
+
+    // Bolt hole size now scales with part thickness instead of staying fixed
+    const holeRadius = clamp(thickness * scale * 0.5, 6, 18);
+
+    const centerX = 300;
+    const centerY = 260;
+    const positions = [
+      { x: centerX, y: centerY - boltRadius },
+      { x: centerX + boltRadius, y: centerY },
+      { x: centerX, y: centerY + boltRadius },
+      { x: centerX - boltRadius, y: centerY }
+    ];
+
+    frontBoltHoles.forEach((hole, index) => {
+      hole.setAttribute("cx", positions[index].x);
+      hole.setAttribute("cy", positions[index].y);
+      hole.setAttribute("r", holeRadius);
+    });
+  }
+
+  /* =========================================
+     UPDATE TOP VIEW (now dynamic — was static before)
+     Shows the flange from the side, rotated 90° from the
+     Right Side View, with hidden (dashed) lines for the
+     bore and bolt holes that pass through the thickness.
+  ========================================= */
+  function updateTopView(dimensions) {
+    const { outerDiameter, innerDiameter, thickness, boltCircle } = dimensions;
+    const scale = 1.2; // fits max 200mm outer diameter within the panel width
+
+    const centerX = 700;
+    const centerY = 260;
+
+    const rectWidth = outerDiameter * scale;
+    const rectHeight = thickness * scale;
+    const rectX = centerX - rectWidth / 2;
+    const rectY = centerY - rectHeight / 2;
+
+    topOuter.setAttribute("x", rectX);
+    topOuter.setAttribute("y", rectY);
+    topOuter.setAttribute("width", rectWidth);
+    topOuter.setAttribute("height", rectHeight);
+
+    const boreWidth = innerDiameter * scale;
+    const boreHeight = rectHeight * 0.65;
+    topBore.setAttribute("x", centerX - boreWidth / 2);
+    topBore.setAttribute("y", centerY - boreHeight / 2);
+    topBore.setAttribute("width", boreWidth);
+    topBore.setAttribute("height", boreHeight);
+
+    const boltOffset = (boltCircle / 2) * scale;
+    topBoltHidden1.setAttribute("x1", centerX - boltOffset);
+    topBoltHidden1.setAttribute("x2", centerX - boltOffset);
+    topBoltHidden1.setAttribute("y1", rectY);
+    topBoltHidden1.setAttribute("y2", rectY + rectHeight);
+
+    topBoltHidden2.setAttribute("x1", centerX + boltOffset);
+    topBoltHidden2.setAttribute("x2", centerX + boltOffset);
+    topBoltHidden2.setAttribute("y1", rectY);
+    topBoltHidden2.setAttribute("y2", rectY + rectHeight);
+
+    // Dimension line for outer diameter (width), now tracks the rectangle edges
+    const dimY = 345;
+    topDimLine.setAttribute("x1", rectX);
+    topDimLine.setAttribute("x2", rectX + rectWidth);
+    topDimLine.setAttribute("y1", dimY);
+    topDimLine.setAttribute("y2", dimY);
+
+    topExtLeft.setAttribute("x1", rectX);
+    topExtLeft.setAttribute("x2", rectX);
+    topExtRight.setAttribute("x1", rectX + rectWidth);
+    topExtRight.setAttribute("x2", rectX + rectWidth);
+
+    topArrowLeft.setAttribute("points", `${rectX},${dimY} ${rectX + 15},${dimY - 6} ${rectX + 15},${dimY + 6}`);
+    topArrowRight.setAttribute("points", `${rectX + rectWidth},${dimY} ${rectX + rectWidth - 15},${dimY - 6} ${rectX + rectWidth - 15},${dimY + 6}`);
+  }
+
+  /* =========================================
+     UPDATE SIDE VIEW
+     Dimension line/arrows now track the profile's real
+     edges instead of staying at fixed coordinates.
+  ========================================= */
+  function updateSideView(dimensions) {
+    const { outerDiameter, thickness } = dimensions;
+    const scale = 1.4; // 100 mm = 140 SVG units
+
+    const width = thickness * scale;
+    const height = outerDiameter * scale;
+    const x = 700 - width / 2;
+    const y = 555 - height / 2;
+
+    sideProfile.setAttribute("x", x);
+    sideProfile.setAttribute("y", y);
+    sideProfile.setAttribute("width", width);
+    sideProfile.setAttribute("height", height);
+
+    const dimY = 630;
+    const left = x;
+    const right = x + width;
+
+    sideDimLine.setAttribute("x1", left);
+    sideDimLine.setAttribute("x2", right);
+    sideDimLine.setAttribute("y1", dimY);
+    sideDimLine.setAttribute("y2", dimY);
+
+    sideExtLeft.setAttribute("x1", left);
+    sideExtLeft.setAttribute("x2", left);
+    sideExtRight.setAttribute("x1", right);
+    sideExtRight.setAttribute("x2", right);
+
+    sideArrowLeft.setAttribute("points", `${left},${dimY} ${left + 15},${dimY - 6} ${left + 15},${dimY + 6}`);
+    sideArrowRight.setAttribute("points", `${right},${dimY} ${right - 15},${dimY - 6} ${right - 15},${dimY + 6}`);
+  }
+
+  /* =========================================
+     UPDATE COMPLETE DRAWING
+  ========================================= */
+  function updateDrawing() {
+    const dimensions = getDimensions();
+    const errorMessage = validateDimensions(dimensions);
+
+    if (errorMessage) {
+      markInvalid(outerDiameterWrapper, dimensions.innerDiameter >= dimensions.outerDiameter || dimensions.boltCircle >= dimensions.outerDiameter);
+      markInvalid(innerDiameterWrapper, dimensions.innerDiameter >= dimensions.outerDiameter || dimensions.boltCircle <= dimensions.innerDiameter);
+      markInvalid(boltCircleWrapper, dimensions.boltCircle >= dimensions.outerDiameter || dimensions.boltCircle <= dimensions.innerDiameter);
+      markInvalid(thicknessWrapper, dimensions.thickness <= 0);
+      showBanner(errorMessage, "error");
+      return;
+    }
+
+    clearInvalidStates();
+    hideBanner();
+
+    // keep sliders in sync with typed values
+    outerDiameterRange.value = dimensions.outerDiameter;
+    innerDiameterRange.value = dimensions.innerDiameter;
+    thicknessRange.value = dimensions.thickness;
+    boltCircleRange.value = dimensions.boltCircle;
+
+    updateDimensionText(dimensions);
+    updateFrontView(dimensions);
+    updateTopView(dimensions);
+    updateSideView(dimensions);
+  }
+
+  /* =========================================
+     RESET DIMENSIONS
+  ========================================= */
+  function resetDimensions() {
+    outerDiameterInput.value = DEFAULTS.outerDiameter;
+    innerDiameterInput.value = DEFAULTS.innerDiameter;
+    thicknessInput.value = DEFAULTS.thickness;
+    boltCircleInput.value = DEFAULTS.boltCircle;
+    updateDrawing();
+    showBanner("Dimensions reset to defaults.", "success");
+  }
+
+  /* =========================================
+     WIRE NUMBER INPUTS <-> RANGE SLIDERS
+  ========================================= */
+  function linkInputAndRange(input, range) {
+    input.addEventListener("input", () => {
+      if (input.value !== "" && !Number.isNaN(Number(input.value))) {
+        range.value = clamp(Number(input.value), Number(range.min), Number(range.max));
+      }
+      updateDrawing();
+    });
+    range.addEventListener("input", () => {
+      input.value = range.value;
+      updateDrawing();
+    });
+  }
+
+  linkInputAndRange(outerDiameterInput, outerDiameterRange);
+  linkInputAndRange(innerDiameterInput, innerDiameterRange);
+  linkInputAndRange(thicknessInput, thicknessRange);
+  linkInputAndRange(boltCircleInput, boltCircleRange);
+
+  /* =========================================
+     BUTTONS
+  ========================================= */
+  $("updateDrawingBtn").addEventListener("click", () => {
+    updateDrawing();
+    if (!statusBanner.hidden && statusBanner.classList.contains("error")) return;
+    showBanner("Drawing updated.", "success");
+  });
+
+  $("resetDimensionsBtn").addEventListener("click", resetDimensions);
+
+  $("resetViewBtn").addEventListener("click", () => {
+    $("drawing-wrapper")?.scrollTo({ left: 0, top: 0, behavior: "smooth" });
+  });
+
+  $("printBtn").addEventListener("click", () => window.print());
+
+  $("svgBtn").addEventListener("click", exportSVG);
+
+  function exportSVG() {
+    const svg = $("technicalDrawing");
+    const serializer = new XMLSerializer();
+    let source = serializer.serializeToString(svg);
+    source = '<?xml version="1.0" standalone="no"?>\r\n' + source;
+
+    const blob = new Blob([source], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "flange-technical-drawing.svg";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showBanner("SVG exported.", "success");
+  }
+
+  /* =========================================
+     TEXT-TO-SPEECH ("PRONOUNCE")
+  ========================================= */
+  const speechSupported = "speechSynthesis" in window;
+
+  function populateVoices() {
+    if (!speechSupported) return;
+    const voices = window.speechSynthesis.getVoices();
+    if (!voices.length) return;
+
+    const previousValue = voiceSelect.value;
+    voiceSelect.innerHTML = "";
+    voices.forEach((voice, i) => {
+      const option = document.createElement("option");
+      option.value = String(i);
+      option.textContent = `${voice.name} (${voice.lang})`;
+      voiceSelect.appendChild(option);
+    });
+
+    // Prefer a voice matching the browser's language on first load
+    if (!previousValue) {
+      const browserLang = (navigator.language || "en").toLowerCase();
+      const matchIndex = voices.findIndex(v => v.lang.toLowerCase().startsWith(browserLang.slice(0, 2)));
+      if (matchIndex >= 0) voiceSelect.value = String(matchIndex);
+    } else {
+      voiceSelect.value = previousValue;
+    }
+  }
+
+  if (speechSupported) {
+    populateVoices();
+    window.speechSynthesis.addEventListener("voiceschanged", populateVoices);
+  } else {
+    pronounceBtn.disabled = true;
+    voiceSelect.disabled = true;
+    speechNote.textContent = "Text-to-speech isn't supported in this browser.";
+  }
+
+  function speakDimensions() {
+    if (!speechSupported) return;
+    const dimensions = getDimensions();
+    const errorMessage = validateDimensions(dimensions);
+
+    let text;
+    if (errorMessage) {
+      text = "There is a problem with the current dimensions. " + errorMessage;
+    } else {
+      text = `Flange with outer diameter ${formatLength(dimensions.outerDiameter)}, ` +
+             `inner diameter ${formatLength(dimensions.innerDiameter)}, ` +
+             `thickness ${formatLength(dimensions.thickness)}, ` +
+             `and bolt circle diameter ${formatLength(dimensions.boltCircle)} with four bolt holes.`;
+    }
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    const voices = window.speechSynthesis.getVoices();
+    const selectedVoice = voices[Number(voiceSelect.value)];
+    if (selectedVoice) utterance.voice = selectedVoice;
+    window.speechSynthesis.speak(utterance);
+  }
+
+  pronounceBtn.addEventListener("click", speakDimensions);
+
+  /* =========================================
+     SHARE LINK
+  ========================================= */
+  function buildShareUrl() {
+    const dimensions = getDimensions();
+    const params = new URLSearchParams({
+      od: dimensions.outerDiameter,
+      id: dimensions.innerDiameter,
+      th: dimensions.thickness,
+      bc: dimensions.boltCircle,
+      u: unit
+    });
+    const url = new URL(window.location.href);
+    url.search = params.toString();
+    return url.toString();
+  }
+
+  async function copyShareLink() {
+    const url = buildShareUrl();
+    try {
+      await navigator.clipboard.writeText(url);
+      showBanner("Share link copied to clipboard.", "success");
+    } catch (err) {
+      // Fallback for browsers without Clipboard API access
+      const tempInput = document.createElement("textarea");
+      tempInput.value = url;
+      tempInput.style.position = "fixed";
+      tempInput.style.opacity = "0";
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      try {
+        document.execCommand("copy");
+        showBanner("Share link copied to clipboard.", "success");
+      } catch (fallbackErr) {
+        showBanner("Couldn't copy automatically — link: " + url, "error");
+      }
+      document.body.removeChild(tempInput);
+    }
+  }
+
+  shareBtn.addEventListener("click", copyShareLink);
+
+  function loadFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has("od") && !params.has("id") && !params.has("th") && !params.has("bc")) return;
+
+    if (params.has("od")) outerDiameterInput.value = params.get("od");
+    if (params.has("id")) innerDiameterInput.value = params.get("id");
+    if (params.has("th")) thicknessInput.value = params.get("th");
+    if (params.has("bc")) boltCircleInput.value = params.get("bc");
+    if (params.get("u") === "in") { unit = "in"; unitMmBtn.setAttribute("aria-pressed", "false"); unitInBtn.setAttribute("aria-pressed", "true"); unitsInfo.textContent = "INCHES (display)"; }
+  }
+
+  /* =========================================
+     INITIAL DRAWING
+  ========================================= */
+  loadFromUrl();
+  updateDrawing();
+})();
+</script>
+</body>
+</html>
